@@ -27,7 +27,8 @@ module.exports.addCategories = async (req, res) => {
     const newCategory = await category.save();
     const categoryObject = newCategory.toObject(); // Convert the document to a plain JavaScript object
     delete categoryObject.__v; // Remove the __v field
-    res.status(200).json({ data: categoryObject });
+    const categories = await Category.find().select("-__v");
+    res.status(200).json({ data: { categories, category: categoryObject } });
   } catch (err) {
     console.log(err);
     res.status(500).json({ message: "something went wrong! ", error: err });
@@ -60,10 +61,12 @@ module.exports.updateCategory = async (req, res) => {
 module.exports.deleteCategory = async (req, res) => {
   const { id } = req.params;
   try {
-    const category = await Category.findByIdAndDelete(id);
+    await Category.findByIdAndDelete(id);
+    const categories = await Category.find().select("-__v");
+
     return res
       .status(200)
-      .json({ message: "category deleted successfully", data: category });
+      .json({ message: "category deleted successfully", data: { categories } });
   } catch (error) {
     res.status(500).json({ message: "Something went wrong!", error });
   }

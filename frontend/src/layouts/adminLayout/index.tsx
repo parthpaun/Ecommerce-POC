@@ -46,14 +46,15 @@ export default function AdminLayout() {
 
   React.useEffect(() => {
     if (!token) {
-      navigate("/login");
+      navigate("/auth/login");
     }
     if (token && userData) {
-      const {role=""} = userData 
-      const expDate = userData?.exp? userData?.exp * 1000 : 0
+      const { role = "" } = userData;
+      const expDate = userData?.exp ? userData?.exp * 1000 : 0;
       const currentTime = Date.now();
       if (currentTime > expDate) {
-        navigate("/login");
+        localStorage.removeItem("token");
+        navigate("/auth/login");
       } else {
         if (role !== "admin") {
           setIsUnAuthorized(true);
@@ -63,8 +64,6 @@ export default function AdminLayout() {
       }
     }
   }, [navigate, token, userData]);
-
-  React.useEffect;
 
   return !isUnauthorized ? (
     <Box sx={{ display: "flex" }}>

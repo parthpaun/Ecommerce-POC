@@ -81,7 +81,7 @@ export default function SignUp() {
       return;
     }
     if (messageData?.type === "success") {
-      navigate("../login");
+      navigate("../auth/login");
       dispatch(resetSuccess());
     }
     dispatch(resetError());

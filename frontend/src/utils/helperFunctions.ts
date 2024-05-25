@@ -5,8 +5,12 @@ import axios, {
   AxiosResponse,
   AxiosError,
 } from "axios";
-import { jwtDecode } from "jwt-decode";
+import { JwtPayload, jwtDecode } from "jwt-decode";
 
+interface CustomJwtPayload extends JwtPayload {
+  role?: string;
+  // Add any other properties you expect in the token
+}
 // Base URL for your API
 const BASE_API_URL = `${process.env.API_URL}/api`;
 
@@ -46,7 +50,7 @@ export const apiCall: ApiCall = async (method, url, data = null) => {
     const err = error as AxiosError;
     if (err?.response?.status === 401) {
       localStorage.removeItem("token");
-      window.location.replace("/login");
+      window.location.replace("/auth/login");
     }
     // Handle any errors (you may want to customize this part)
     console.error(`API call failed: ${error}`);
@@ -54,10 +58,11 @@ export const apiCall: ApiCall = async (method, url, data = null) => {
   }
 };
 
-export const getUserData = () => {
+export const getUserData = (): CustomJwtPayload | null => {
   const token = localStorage.getItem("token");
   if (token) {
-    return jwtDecode(token);
+    const userData: CustomJwtPayload = jwtDecode(token);
+    return userData;
   }
   return null;
 };

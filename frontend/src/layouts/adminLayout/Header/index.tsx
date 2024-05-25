@@ -1,6 +1,8 @@
 import { Box, IconButton, Toolbar, styled } from "@mui/material";
 import MuiAppBar, { AppBarProps as MuiAppBarProps } from "@mui/material/AppBar";
 import MenuIcon from "@mui/icons-material/Menu";
+import ProfileMenu from "./ProfileMenu";
+
 const drawerWidth = 240;
 interface AppBarProps extends MuiAppBarProps {
   open?: boolean;
@@ -40,12 +42,9 @@ const Header = ({ open, handleDrawerOpen }: HeaderProps) => {
         >
           <MenuIcon />
         </IconButton>
-        <Box display="flex" justifyContent={"flex-end"} width={"100%"}>
-          Header
+        <Box display={"flex"} width={"100%"} justifyContent={"flex-end"}>
+          <ProfileMenu />
         </Box>
-        {/* <Typography variant="h6" noWrap component="div">
-          Persistent drawer
-        </Typography> */}
       </Toolbar>
     </AppBar>
   );

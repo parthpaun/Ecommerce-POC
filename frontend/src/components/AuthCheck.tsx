@@ -10,7 +10,7 @@ const AuthCheck = (props: Props) => {
   const token = localStorage.getItem("token");
   useEffect(() => {
     if (!token) {
-      navigate("/login");
+      navigate("/auth/login");
     }
   }, [token, navigate]);
   return props.children;

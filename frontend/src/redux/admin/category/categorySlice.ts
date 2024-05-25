@@ -1,5 +1,5 @@
 import { createSlice } from "@reduxjs/toolkit";
-import { getCategories } from "./categoryAction";
+import { addCategory, deleteCategory, getCategories } from "./categoryAction";
 
 type CategoryData = {
   name: string;
@@ -11,6 +11,7 @@ interface Category {
   isLoading: boolean;
   error: string | undefined;
   successMessage: string;
+  category: Record<string, string>;
 }
 
 const initialState: Category = {
@@ -18,12 +19,23 @@ const initialState: Category = {
   successMessage: "",
   isLoading: false,
   error: "",
+  category: {},
 };
 
 const authSlice = createSlice({
   name: "admin",
   initialState,
-  reducers: {},
+  reducers: {
+    reseCategory(state) {
+      state.category = {};
+    },
+    resetSuccess(state) {
+      state.successMessage = "";
+    },
+    resetError(state) {
+      state.error = "";
+    },
+  },
   extraReducers(builder) {
     // Get categories
     builder.addCase(getCategories.pending, (state) => {
@@ -32,9 +44,36 @@ const authSlice = createSlice({
     builder.addCase(getCategories.fulfilled, (state, action) => {
       state.isLoading = false;
       state.categories = action.payload.data;
-      state.successMessage = "User Created Successfully";
+      state.successMessage = "Categories has been fetched successfully ";
     });
     builder.addCase(getCategories.rejected, (state, action) => {
+      state.isLoading = false;
+      state.error = action?.error?.message;
+    });
+
+    builder.addCase(addCategory.pending, (state) => {
+      state.isLoading = true;
+    });
+    builder.addCase(addCategory.fulfilled, (state, action) => {
+      state.isLoading = false;
+      state.categories = action.payload.data.categories;
+      state.category = action.payload.data.category;
+      state.successMessage = "Category Created Successfully";
+    });
+    builder.addCase(addCategory.rejected, (state, action) => {
+      state.isLoading = false;
+      state.error = action?.error?.message;
+    });
+
+    builder.addCase(deleteCategory.pending, (state) => {
+      state.isLoading = true;
+    });
+    builder.addCase(deleteCategory.fulfilled, (state, action) => {
+      state.isLoading = false;
+      state.categories = action.payload.data.categories;
+      state.successMessage = "Category Deleted Successfully";
+    });
+    builder.addCase(deleteCategory.rejected, (state, action) => {
       state.isLoading = false;
       state.error = action?.error?.message;
     });

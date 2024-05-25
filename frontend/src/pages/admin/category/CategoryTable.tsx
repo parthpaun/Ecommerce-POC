@@ -5,13 +5,16 @@ import {
   TableRow,
   TableCell,
   TableBody,
+  IconButton,
 } from "@mui/material";
+import DeleteIcon from "@mui/icons-material/Delete";
 
 type Props = {
   data: Record<string, string>[];
+  handleDeleteCategory: (id: string) => void;
 };
 const Table = (props: Props) => {
-  const { data } = props;
+  const { data, handleDeleteCategory } = props;
   return (
     <Paper elevation={2} style={{ padding: "1rem" }}>
       <MuiTable>
@@ -20,6 +23,7 @@ const Table = (props: Props) => {
             <TableCell>Sr. No.</TableCell>
             <TableCell>Category</TableCell>
             <TableCell>Description</TableCell>
+            <TableCell>Action</TableCell>
           </TableRow>
         </TableHead>
         <TableBody>
@@ -29,27 +33,21 @@ const Table = (props: Props) => {
                 <TableCell>{index + 1}</TableCell>
                 <TableCell>{category?.name}</TableCell>
                 <TableCell>{category?.description}</TableCell>
+                <TableCell>
+                  {
+                    <IconButton
+                      color="error"
+                      onClick={() => handleDeleteCategory(category?._id)}
+                    >
+                      <DeleteIcon />
+                    </IconButton>
+                  }
+                </TableCell>
               </TableRow>
             );
           })}
         </TableBody>
       </MuiTable>
-      {/* <table>
-        <tr>
-          <th>sr.no</th>
-          <th>Category</th>
-          <th>description</th>
-        </tr>
-        {data.map((category, index) => {
-          return (
-            <tr key={category?._id}>
-              <td>{index + 1}</td>
-              <td>{category?.name}</td>
-              <td>{category?.description}</td>
-            </tr>
-          );
-        })}
-      </table> */}
     </Paper>
   );
 };

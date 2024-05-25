@@ -4,7 +4,8 @@ import Loadable from "../components/Loadable";
 import Categories from "../pages/admin/category";
 
 const AdminLayout = Loadable(lazy(() => import("../layouts/adminLayout")));
-// const Categories = Loadable(lazy(() => import("../pages/admin/category")));
+
+const NotFoundPage = Loadable(lazy(() => import("../pages/404")));
 
 export const adminRoutes = {
   path: "/admin",
@@ -21,6 +22,10 @@ export const adminRoutes = {
     {
       path: "categories",
       element: <Categories />,
+    },
+    {
+      path: "*",
+      element: <NotFoundPage />,
     },
   ],
 };

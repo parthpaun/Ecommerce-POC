@@ -24,7 +24,7 @@ const Login: FC = () => {
   useEffect(() => {
     if (token || authState.isLoggedIn) {
       const userData = getUserData();
-      const url = baseURL[userData?.role] || "/";
+      const url = baseURL[`${userData?.role}`] || "/";
       navigate(url);
     }
   }, [navigate, token, authState]);
@@ -90,7 +90,7 @@ const Login: FC = () => {
               </Link>
             </Grid>
             <Grid item>
-              <Link href="signup" variant="body2">
+              <Link href="auth/signup" variant="body2">
                 {"Don't have an account? Sign Up"}
               </Link>
             </Grid>
