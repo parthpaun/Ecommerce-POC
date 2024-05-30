@@ -28,6 +28,8 @@ const AppBar = styled(MuiAppBar, {
       duration: theme.transitions.duration.enteringScreen,
     }),
   }),
+  backgroundColor: theme.palette.background.default,
+  color: theme.palette.primary.main,
 }));
 const Header = ({ open, handleDrawerOpen }: HeaderProps) => {
   return (

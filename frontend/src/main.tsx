@@ -2,7 +2,6 @@ import React from "react";
 import ReactDOM from "react-dom/client";
 import App from "./App.tsx";
 import { CssBaseline, ThemeProvider } from "@mui/material";
-import ThemeCustomization from "./themes";
 import theme from "./theme/index.ts";
 import { Provider } from "react-redux";
 import { store } from "./redux/store.ts";
