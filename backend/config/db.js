@@ -1,8 +1,7 @@
 // config/db.js
 const mongoose = require("mongoose");
 
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/ecom-poc-new';
-
+const MONGODB_URI = process.env.MONGODB_URI || 'mongodb+srv://parthpaun15:PP12345@parthpaun15.dqfjfoy.mongodb.net/ecom-poc';
 mongoose
   .connect(MONGODB_URI)
   .then((data) => {
