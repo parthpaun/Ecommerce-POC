@@ -26,7 +26,7 @@ const authSlice = createSlice({
   name: "admin",
   initialState,
   reducers: {
-    reseCategory(state) {
+    resetCategory(state) {
       state.category = {};
     },
     resetSuccess(state) {

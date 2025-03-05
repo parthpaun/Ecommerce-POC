@@ -31,7 +31,7 @@ const Main = styled("main", { shouldForwardProp: (prop) => prop !== "open" })<{
 }));
 
 export default function AdminLayout() {
-  const [open, setOpen] = React.useState(false);
+  const [open, setOpen] = React.useState(true);
   const [isUnauthorized, setIsUnAuthorized] = React.useState(false);
   const navigate = useNavigate();
   const token = localStorage.getItem("token");

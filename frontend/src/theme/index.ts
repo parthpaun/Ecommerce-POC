@@ -14,7 +14,7 @@ const theme = createTheme({
     },
     text: {
       primary: "#212121", // Dark gray text
-      secondary: "#fff", // Medium gray text
+      secondary: "#ababab", // Medium gray text
     },
     success: {
       main: "#4CAF50", // Vibrant green

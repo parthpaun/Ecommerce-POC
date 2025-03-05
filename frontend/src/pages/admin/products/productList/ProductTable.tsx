@@ -20,18 +20,18 @@ type Category = {
 
 type Props = {
   data: Category[];
-  handleDeleteCategory: (id: string) => void;
+  handleDeleteProduct: (id: string) => void;
 };
 const Table = (props: Props) => {
-  const { data, handleDeleteCategory } = props;
+  const { data, handleDeleteProduct } = props;
   return (
     <Paper elevation={2} style={{ padding: "1rem" }}>
       <MuiTable>
         <TableHead>
           <TableRow>
             <TableCell>Sr. No.</TableCell>
+            <TableCell>Product</TableCell>
             <TableCell>Category</TableCell>
-            <TableCell>Parent category</TableCell>
             <TableCell>Description</TableCell>
             <TableCell>Action</TableCell>
           </TableRow>
@@ -48,7 +48,7 @@ const Table = (props: Props) => {
                   {
                     <IconButton
                       color="error"
-                      onClick={() => handleDeleteCategory(category?._id)}
+                      onClick={() => handleDeleteProduct(category?._id)}
                     >
                       <DeleteIcon />
                     </IconButton>

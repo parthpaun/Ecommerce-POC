@@ -86,10 +86,10 @@ const DrawerComponent = ({ open, handleDrawerClose }: DrawerProps) => {
                 onClick={() => handleItemChange(item)}
                 selected={selectedItem?.id === item.id}
               >
-                <ListItemIcon>
+                <ListItemIcon sx={{color:"primary"}}>
                   <Icon />
                 </ListItemIcon>
-                <ListItemText primary={item.title} />
+                <ListItemText primary={item.title} sx={{ color: "primary" }} />
               </ListItemButton>
             </ListItem>
           );

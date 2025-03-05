@@ -2,6 +2,9 @@
 import { lazy } from "react";
 import Loadable from "../components/Loadable";
 import Categories from "../pages/admin/category";
+import ProductList from "../pages/admin/products/productList";
+import { Outlet } from "react-router-dom";
+import ProductForm from "../pages/admin/products/addUpdateProduct";
 
 const AdminLayout = Loadable(lazy(() => import("../layouts/adminLayout")));
 
@@ -19,6 +22,48 @@ export const adminRoutes = {
         </div>
       ),
     },
+    {
+      path: "products",
+      element: (
+        <div>
+          <Outlet />
+        </div>
+      ),
+      children: [
+        {
+          path: "",
+          element: <ProductList />,
+        },
+        {
+          path: "add",
+          element: (
+            <div>
+              <ProductForm />
+            </div>
+          ),
+        },
+        {
+          path: "update/:productId",
+          element: (
+            <div>
+              <ProductForm isUpdateProduct />
+            </div>
+          ),
+        },
+        {
+          path: ":productId",
+          element: (
+            <div>
+              <h1>Details </h1>{" "}
+            </div>
+          ),
+        },
+      ],
+    },
+    //  {
+    //   path: "products",
+    //   element: <Products />,
+    // },
     {
       path: "categories",
       element: <Categories />,

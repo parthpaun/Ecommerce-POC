@@ -20,13 +20,18 @@ interface ApiCall {
     method: Method,
     url: string,
     data?: Record<string, any> | null,
-    headers?: Record<string, string>
+    headersData?: Record<string, any>
   ): Promise<any>;
 }
 
 // Common API function
-export const apiCall: ApiCall = async (method, url, data = null) => {
-  const headers: Record<string, string> = {};
+export const apiCall: ApiCall = async (
+  method,
+  url,
+  data = null,
+  headersData = {}
+) => {
+  const headers = { ...headersData };
   if (!url.includes("/auth")) {
     const token = localStorage.getItem("token");
     if (token) {

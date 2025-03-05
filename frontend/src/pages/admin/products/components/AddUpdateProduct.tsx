@@ -6,65 +6,65 @@ import DialogActions from "@mui/material/DialogActions";
 import DialogContent from "@mui/material/DialogContent";
 import DialogTitle from "@mui/material/DialogTitle";
 import { Controller, SubmitHandler, useForm } from "react-hook-form";
-import { addCategory } from "../../../../redux/admin/category/categoryAction";
-import { useAppDispatch, useAppSelector } from "../../../../redux/hooks";
-import { FormControl, InputLabel, MenuItem, Select } from "@mui/material";
+import { addProduct } from "../../../../redux/admin/product/productAction";
+import { useAppDispatch } from "../../../../redux/hooks";
+import FileUpload from "./FileUpload";
 
 type Props = {
   open: boolean;
   mode?: string;
   data?: Record<string, unknown>;
-  handleAddUpdateCategory: (open: boolean) => void;
+  handleAddUpdateProduct: (open: boolean) => void;
 };
-interface CategoryInputs {
-  name: string;
-  parentCategory?: string;
-  description?: string;
-}
-const AddUpdateCategory = (props: Props) => {
-  const { open, mode, data, handleAddUpdateCategory } = props;
+
+const AddUpdateProduct = (props: Props) => {
+  const { open, mode, data, handleAddUpdateProduct } = props;
   const dispatch = useAppDispatch();
-  const categories = useAppSelector(
-    (state) => state?.adminCategory
-  )?.categories;
   const handleClose = () => {
-    handleAddUpdateCategory(false);
+    handleAddUpdateProduct(false);
   };
 
-  const { control, handleSubmit, formState, reset } = useForm<CategoryInputs>();
+  const { control, handleSubmit, formState, reset, setValue } =
+    useForm<ProductInputs>();
   const { errors } = formState;
-  const onSubmit: SubmitHandler<CategoryInputs> = (data) => {
-    dispatch(addCategory(data));
+  const onSubmit: SubmitHandler<ProductInputs> = (data) => {
+    dispatch(addProduct(data));
     handleClose();
     reset();
   };
 
   React.useEffect(() => {
-    //handle update category scenario
+    //handle update product scenario
   }, [data]);
 
   return (
     <Dialog open={open} onClose={handleClose} fullWidth>
-      <DialogTitle>{`${mode} category`.toLocaleUpperCase()}</DialogTitle>
+      <DialogTitle>{`${mode} product`.toLocaleUpperCase()}</DialogTitle>
+      {/* <ProductForm handleSubmit={handleSubmit} /> */}
       <form onSubmit={handleSubmit(onSubmit)}>
         <DialogContent>
-          <Controller
-            control={control}
-            name="name"
-            rules={{ required: "Category is required" }}
-            render={({ field }) => (
-              <TextField
-                {...field}
-                label="Category"
-                variant="outlined"
-                error={!!errors.name}
-                helperText={errors.name ? errors.name?.message : ""}
-                fullWidth
-                margin={"dense"}
-              />
-            )}
-          />
-          <Controller
+          <div className="flex">
+            <Controller
+              control={control}
+              name="name"
+              rules={{ required: "Product is required" }}
+              render={({ field }) => (
+                <TextField
+                  {...field}
+                  label="Product Title"
+                  variant="outlined"
+                  error={!!errors.name}
+                  helperText={errors.name ? errors.name?.message : ""}
+                  fullWidth
+                  margin={"dense"}
+                />
+              )}
+            />
+            <div>
+              <FileUpload  setValue={setValue}/>
+            </div>
+          </div>
+          {/* <Controller
             control={control}
             name="parentCategory"
             render={({ field }) => (
@@ -107,7 +107,7 @@ const AddUpdateCategory = (props: Props) => {
                 maxRows={4}
               />
             )}
-          />
+          /> */}
         </DialogContent>
         <DialogActions>
           <Button onClick={handleClose}>Cancel</Button>
@@ -118,4 +118,4 @@ const AddUpdateCategory = (props: Props) => {
   );
 };
 
-export default AddUpdateCategory;
+export default AddUpdateProduct;
