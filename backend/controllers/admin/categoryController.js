@@ -2,8 +2,19 @@ const Category = require("./../../models/category");
 
 module.exports.getCategories = async (req, res) => {
   try {
-    const categories = await Category.find().select("-__v");
-    res.status(200).json({ data: categories });
+    const categories = await Category.find()
+      .populate("parentCategory")
+      .select("-__v");
+    // const categoriesUpdated = categories.json().map((categoryData) => {
+    //   return {
+    //     ...categoryData,
+    //     parent_category: categories?.parent_category?.name,
+    //     parent_category_Id: categories?.parent_category?._id,
+    //   };
+    // });
+    res.status(200).json({
+      data: categories,
+    });
   } catch (err) {
     console.log(err);
     res.status(500).json({ message: "something went wrong! ", error: err });
@@ -13,17 +24,18 @@ module.exports.getCategories = async (req, res) => {
 module.exports.addCategories = async (req, res) => {
   try {
     const categoriesData = req.body.data;
-    const { name, description } = categoriesData || {};
+    const { name, description, parentCategory } = categoriesData || {};
     const isCategoryAvailable = await Category.findOne({ name: name });
     if (isCategoryAvailable) {
       return res
         .status(500)
         .json({ message: "This category is already available" });
     }
-    const category = new Category({
-      name: name,
-      description: description,
-    });
+    const categoryData = { name: name, description: description };
+    if(parentCategory){
+      categoryData.parentCategory = parentCategory
+    }
+    const category = new Category(categoryData);
     const newCategory = await category.save();
     const categoryObject = newCategory.toObject(); // Convert the document to a plain JavaScript object
     delete categoryObject.__v; // Remove the __v field

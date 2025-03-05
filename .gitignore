@@ -12,3 +12,4 @@ npm-debug.log
 build/
 dist/
 client/.parcel-cache
+yarn.lock
