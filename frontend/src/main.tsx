@@ -11,12 +11,10 @@ import "./index.css";
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
     <Provider store={store}>
-      {/* <ThemeCustomization> */}
       <ThemeProvider theme={theme}>
         <CssBaseline />
         <App />
       </ThemeProvider>
-      {/* </ThemeCustomization> */}
     </Provider>
   </React.StrictMode>
 );

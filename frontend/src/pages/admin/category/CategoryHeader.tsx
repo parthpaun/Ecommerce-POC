@@ -1,4 +1,4 @@
-import { Box, Button } from "@mui/material";
+import { Box, Button, Typography } from "@mui/material";
 import AddOutlinedIcon from "@mui/icons-material/AddOutlined";
 
 type Payload = {
@@ -17,15 +17,17 @@ const CategoryHeader = ({ handleAddUpdateCategory }: Payload) => {
       paddingX={"24"}
       paddingY={"16"}
       width={"100%"}
-      flex={1}
+      marginBottom={"15px"}
     >
-      <h1>Categories</h1>
+      <Typography variant="h4">
+        <strong>Category</strong>
+      </Typography>
       <Button
         variant="contained"
         startIcon={<AddOutlinedIcon />}
         onClick={() => handleAddUpdateCategory(true, "add")}
       >
-        Add
+        Add Category
       </Button>
     </Box>
   );

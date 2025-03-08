@@ -1,14 +1,7 @@
-import { Box, Button } from "@mui/material";
+import { Box, Button, Typography } from "@mui/material";
 import AddOutlinedIcon from "@mui/icons-material/AddOutlined";
 import { useNavigate } from "react-router-dom";
 
-// type Payload = {
-//   handleAddUpdateProduct: (
-//     isOpen: boolean,
-//     mode?: string,
-//     data?: Record<string, string>
-//   ) => void;
-// };
 const ProductListHeader = () => {
   const navigate = useNavigate();
   return (
@@ -19,9 +12,11 @@ const ProductListHeader = () => {
       paddingX={"24"}
       paddingY={"16"}
       width={"100%"}
-      flex={1}
+      marginBottom={"15px"}
     >
-      <h1>Products</h1>
+      <Typography variant="h4">
+        <strong>Products</strong>
+      </Typography>
       <Button
         variant="contained"
         startIcon={<AddOutlinedIcon />}
