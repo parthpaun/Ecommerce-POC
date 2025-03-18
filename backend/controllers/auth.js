@@ -45,10 +45,8 @@ module.exports.signUp = async (req, res) => {
 
     // Create addresses and update the user with their references
     if (addresses && addresses.length > 0) {
-      const addressIds = [];
-
-      for (const address of addresses) {
-        const newAddress = new Address({
+      const savedAddresses = await Address.insertMany(
+        addresses.map((address) => ({
           userId: savedUser._id,
           address_line1: address.address_line1,
           address_line2: address.address_line2,
@@ -57,13 +55,9 @@ module.exports.signUp = async (req, res) => {
           country: address.country,
           postal_code: address.postal_code,
           isDefault: address.isDefault || false,
-        });
-
-        // Save the address to the database
-        const savedAddress = await newAddress.save();
-        // Collect the address ID
-        addressIds.push(savedAddress._id);
-      }
+        }))
+      );
+      const addressIds = savedAddresses.map((address) => address._id);
 
       // Update the user's addressId field with the array of address ObjectIds
       savedUser.addressId = addressIds;
@@ -71,7 +65,7 @@ module.exports.signUp = async (req, res) => {
     }
 
     // Respond with success message and user data
-    res
+    return res
       .status(201)
       .json({ message: "User registered successfully", user: savedUser });
   } catch (error) {
@@ -82,7 +76,7 @@ module.exports.signUp = async (req, res) => {
       await User.findByIdAndDelete(savedUser._id);
     }
 
-    res.status(500).json({ message: "Server error" });
+    return res.status(500).json({ message: "Server error" });
   }
 };
 
@@ -93,7 +87,6 @@ module.exports.signIn = async (req, res) => {
       path: "addressId",
       select: "-__v",
     });
-    console.log(user);
     if (!user) {
       return res.status(400).json({ message: "Invalid email or phone number" });
     }
@@ -104,7 +97,7 @@ module.exports.signIn = async (req, res) => {
     const token = jwt.sign(
       { userId: user._id, email: user.email, role: user.role },
       "JWT",
-      { expiresIn: "1h" } // Token expires in 1 hour (adjust as needed)
+      { expiresIn: "1d" } // Token expires in 1 hour (adjust as needed)
     );
     const { _id, email, role, first_name, last_name, phone_number } = user;
     res.status(200).json({
