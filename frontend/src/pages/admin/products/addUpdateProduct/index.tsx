@@ -728,7 +728,7 @@ const ProductForm = ({ isUpdateProduct }: ProductFormProps) => {
                         Each section must have at least one attribute.
                       </Typography>
                     )}
-                    {spec.attributes.map((detail, keyIndex) => (
+                    {spec.attributes.map((_, keyIndex) => (
                       <Box
                         key={keyIndex}
                         sx={{
