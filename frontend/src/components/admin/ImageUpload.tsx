@@ -22,7 +22,7 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
     (acceptedFiles: File[]) => {
       setImages([...acceptedFiles]);
     },
-    [images, setImages]
+    [setImages]
   );
 
   const removeImage = (file: ImageData) => {
