@@ -5,35 +5,30 @@ module.exports.getCategories = async (req, res) => {
     const categories = await Category.find()
       .populate("parentCategory")
       .select("-__v");
-    // const categoriesUpdated = categories.json().map((categoryData) => {
-    //   return {
-    //     ...categoryData,
-    //     parent_category: categories?.parent_category?.name,
-    //     parent_category_Id: categories?.parent_category?._id,
-    //   };
-    // });
-    res.status(200).json({
+    return res.status(200).json({
       data: categories,
     });
   } catch (err) {
-    console.log(err);
-    res.status(500).json({ message: "something went wrong! ", error: err });
+    return res
+      .status(500)
+      .json({ message: "something went wrong! ", error: err });
   }
 };
 
 module.exports.addCategories = async (req, res) => {
   try {
     const categoriesData = req.body.data;
-    const { name, description, parentCategory } = categoriesData || {};
+    const { name, description, parentCategory, attributes, image } =
+      categoriesData || {};
     const isCategoryAvailable = await Category.findOne({ name: name });
     if (isCategoryAvailable) {
       return res
         .status(500)
         .json({ message: "This category is already available" });
     }
-    const categoryData = { name: name, description: description };
-    if(parentCategory){
-      categoryData.parentCategory = parentCategory
+    const categoryData = { name, description, attributes, image };
+    if (parentCategory) {
+      categoryData.parentCategory = parentCategory;
     }
     const category = new Category(categoryData);
     const newCategory = await category.save();
@@ -42,8 +37,9 @@ module.exports.addCategories = async (req, res) => {
     const categories = await Category.find().select("-__v");
     res.status(200).json({ data: { categories, category: categoryObject } });
   } catch (err) {
-    console.log(err);
-    res.status(500).json({ message: "something went wrong! ", error: err });
+    return res
+      .status(500)
+      .json({ message: "something went wrong! ", error: err });
   }
 };
 
@@ -65,8 +61,9 @@ module.exports.updateCategory = async (req, res) => {
     const newCategory = await category.save();
     res.status(200).json({ data: newCategory });
   } catch (err) {
-    console.log(err);
-    res.status(500).json({ message: "something went wrong! ", error: err });
+    return res
+      .status(500)
+      .json({ message: "something went wrong! ", error: err });
   }
 };
 

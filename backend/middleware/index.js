@@ -11,7 +11,6 @@ module.exports.authenticateToken = (req, res, next) => {
 
   jwt.verify(token, secretKey, (err, user) => {
     if (err) {
-      console.log("err", err);
       if (err.name === "TokenExpiredError") {
         // Token has expired
         return res.status(401).json({ error: "Token has expired" });

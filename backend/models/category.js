@@ -11,15 +11,9 @@ const categorySchema = new mongoose.Schema(
     attributes: [
       {
         name: { type: String, required: true }, // E.g., "RAM", "Storage", "Color"
-        type: {
-          type: String,
-          enum: ["string", "number", "boolean"],
-          required: true,
-        }, // Data type
-        isVariant: { type: Boolean, default: false }, // If true, affects price & stock
       },
     ],
-    icon: { type: String }, // Category icon/image URL (optional)
+    image: { type: String }, // Category icon/image URL (optional)
     description: { type: String }, // Optional description
     isActive: { type: Boolean, default: true }, // Active/inactive status
   },
