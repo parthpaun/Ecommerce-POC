@@ -1,14 +1,9 @@
 import { Box, Button, Typography } from "@mui/material";
 import AddOutlinedIcon from "@mui/icons-material/AddOutlined";
+import { useNavigate } from "react-router-dom";
 
-type Payload = {
-  handleAddUpdateCategory: (
-    isOpen: boolean,
-    mode?: string,
-    data?: Record<string, string>
-  ) => void;
-};
-const CategoryHeader = ({ handleAddUpdateCategory }: Payload) => {
+const CategoryHeader = () => {
+  const navigate = useNavigate();
   return (
     <Box
       display={"flex"}
@@ -25,7 +20,8 @@ const CategoryHeader = ({ handleAddUpdateCategory }: Payload) => {
       <Button
         variant="contained"
         startIcon={<AddOutlinedIcon />}
-        onClick={() => handleAddUpdateCategory(true, "add")}
+        onClick={() => navigate("/admin/categories/add")}
+        color="secondary"
       >
         Add Category
       </Button>

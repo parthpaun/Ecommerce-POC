@@ -5,6 +5,7 @@ import Categories from "../pages/admin/category";
 import ProductList from "../pages/admin/products/productList";
 import { Outlet } from "react-router-dom";
 import ProductForm from "../pages/admin/products/addUpdateProduct";
+import CategoryForm from "../pages/admin/category/addUpdateCategory";
 
 const AdminLayout = Loadable(lazy(() => import("../layouts/adminLayout")));
 
@@ -66,7 +67,41 @@ export const adminRoutes = {
     // },
     {
       path: "categories",
-      element: <Categories />,
+      element: (
+        <div>
+          <Outlet />
+        </div>
+      ),
+      children: [
+        {
+          path: "",
+          element: <Categories />,
+        },
+        {
+          path: "add",
+          element: (
+            <div>
+              <CategoryForm />
+            </div>
+          ),
+        },
+        {
+          path: "update/:categoryId",
+          element: (
+            <div>
+              <CategoryForm isUpdate />
+            </div>
+          ),
+        },
+        {
+          path: ":productId",
+          element: (
+            <div>
+              <h1>Details </h1>{" "}
+            </div>
+          ),
+        },
+      ],
     },
     {
       path: "*",

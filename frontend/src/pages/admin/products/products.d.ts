@@ -20,9 +20,20 @@ interface ProductFormProps {
   isUpdateProduct?: boolean; // Flag to determine if the form is for updating a product (optional)
 }
 
+type SpecificationDetail = {
+  key: string;
+  value: string;
+};
+
+type Specification = {
+  section: string;
+  attributes: SpecificationDetail[];
+};
+
 interface FormValues {
   name: string;
   description: string;
+  brand: string;
   category: string;
   basePrice: string;
   discount: string;
@@ -30,15 +41,11 @@ interface FormValues {
   images: ImageData[];
   stock: string;
   sku: string;
+  specifications: Specification[];
 }
 
 interface Variation {
-  color?: string;
-  size?: string;
-  storage?: string;
-  price: number;
-  discountPrice?: number;
-  stock: number;
+  [key: string]: string | number;
 }
 
 interface ImageResponse {
@@ -49,3 +56,4 @@ interface ImageResponse {
 interface ImageData extends ImageResponse {
   imageUrl: string;
 }
+

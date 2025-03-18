@@ -29,12 +29,13 @@ interface ImenuItem {
   };
   pathName: string;
 }
-const drawerWidth = 240;
+
+const drawerWidth = 300;
+
 const DrawerHeader = styled("div")(({ theme }) => ({
   display: "flex",
   alignItems: "center",
   padding: theme.spacing(0, 1),
-  // necessary for content to be below app bar
   ...theme.mixins.toolbar,
   justifyContent: "flex-end",
 }));
@@ -46,13 +47,18 @@ const DrawerComponent = ({ open, handleDrawerClose }: DrawerProps) => {
   const theme = useTheme();
   const navigate = useNavigate();
   const { pathname } = useLocation();
+
   React.useEffect(() => {
-    const matchItem = adminMenuItems.find((item) => item.pathName === pathname);
+    const matchItem = adminMenuItems.find((item) =>
+      pathname.includes(item.pathName)
+    );
     setSelectedItem(matchItem);
   }, [pathname]);
+
   const handleItemChange = (item: ImenuItem) => {
     navigate(item?.url);
   };
+
   return (
     <Drawer
       sx={{
@@ -61,6 +67,8 @@ const DrawerComponent = ({ open, handleDrawerClose }: DrawerProps) => {
         "& .MuiDrawer-paper": {
           width: drawerWidth,
           boxSizing: "border-box",
+          backgroundColor: "#111827", // Dark sidebar background
+          color: "#FFFFFF", // White text
         },
       }}
       variant="persistent"
@@ -68,7 +76,7 @@ const DrawerComponent = ({ open, handleDrawerClose }: DrawerProps) => {
       open={open}
     >
       <DrawerHeader>
-        <IconButton onClick={handleDrawerClose}>
+        <IconButton onClick={handleDrawerClose} sx={{ color: "#FFFFFF" }}>
           {theme.direction === "ltr" ? (
             <ChevronLeftIcon />
           ) : (
@@ -76,20 +84,45 @@ const DrawerComponent = ({ open, handleDrawerClose }: DrawerProps) => {
           )}
         </IconButton>
       </DrawerHeader>
-      <Divider />
+      <Divider sx={{ borderColor: "#374151" }} />
       <List>
         {adminMenuItems.map((item) => {
           const Icon = item.icon;
+          const isSelected = selectedItem?.id === item.id;
           return (
             <ListItem key={item.id} disablePadding>
               <ListItemButton
                 onClick={() => handleItemChange(item)}
-                selected={selectedItem?.id === item.id}
+                selected={isSelected}
+                sx={{
+                  "&.Mui-selected": {
+                    backgroundColor: "#6366F1 ", // Ensure selected background
+                    color: "#FFFFFF", // Text color for selected item
+                    "&:hover": {
+                      backgroundColor: "#4F46E5 ", // Darker purple on hover
+                    },
+                  },
+                  "&:hover": { backgroundColor: "#374151" }, // Hover effect for non-selected items
+                  borderRadius: "8px",
+                  marginX: "12px",
+                  marginY: "4px",
+
+                }}
               >
-                <ListItemIcon sx={{color:"primary"}}>
+                <ListItemIcon
+                  sx={{
+                    color: isSelected ? "#FFFFFF" : "#9CA3AF", // White if selected, gray otherwise
+                  }}
+                >
                   <Icon />
                 </ListItemIcon>
-                <ListItemText primary={item.title} sx={{ color: "primary" }} />
+                <ListItemText
+                  primary={item.title}
+                  sx={{
+                    color: isSelected ? "#FFFFFF" : "#D1D5DB", // White if selected, light gray otherwise
+                    fontWeight: isSelected ? "bold" : "normal",
+                  }}
+                />
               </ListItemButton>
             </ListItem>
           );

@@ -21,6 +21,7 @@ const ProductListHeader = () => {
         variant="contained"
         startIcon={<AddOutlinedIcon />}
         onClick={() => navigate("add")}
+        color="secondary"
       >
         Add product
       </Button>

@@ -5,6 +5,7 @@ type CategoryData = {
   name: string;
   description: string;
   _id: string;
+  attributes: Record<string, string>[];
 };
 interface Category {
   categories: CategoryData[];

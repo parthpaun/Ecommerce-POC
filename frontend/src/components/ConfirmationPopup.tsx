@@ -61,8 +61,12 @@ export default function ConfirmPopup({
           </DialogContentText>
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleClose}>{cancelButtonText}</Button>
-          <Button onClick={onConfirm}>{confirmButtonText}</Button>
+          <Button onClick={handleClose} variant="contained">
+            {cancelButtonText}
+          </Button>
+          <Button onClick={onConfirm} variant="contained">
+            {confirmButtonText}
+          </Button>
         </DialogActions>
       </Dialog>
     </React.Fragment>

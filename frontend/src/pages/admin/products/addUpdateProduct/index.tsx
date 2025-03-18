@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm, Controller, useFieldArray } from "react-hook-form";
 import {
   TextField,
@@ -9,23 +9,33 @@ import {
   IconButton,
   Select,
   MenuItem,
+  FormControl,
+  InputLabel,
+  Accordion,
+  AccordionSummary,
+  AccordionDetails,
 } from "@mui/material";
-import { Add, Delete, Inventory } from "@mui/icons-material";
+import { Add, Delete, Inventory, ExpandMore } from "@mui/icons-material";
 import ImageUpload from "../../../../components/admin/ImageUpload";
 import { apiCall } from "../../../../utils/helperFunctions";
+import { useAppDispatch, useAppSelector } from "../../../../redux/hooks";
+import { getCategories } from "../../../../redux/admin/category/categoryAction";
 
 const ProductForm = ({ isUpdateProduct }: ProductFormProps) => {
-  const { control, handleSubmit, setValue, getValues } = useForm<FormValues>({
-    defaultValues: {
-      name: "",
-      description: "",
-      category: "",
-      basePrice: "",
-      discount: "",
-      variations: [],
-      images: [],
-    },
-  });
+  const dispatch = useAppDispatch();
+  const { control, handleSubmit, setValue, getValues, reset } =
+    useForm<FormValues>({
+      defaultValues: {
+        name: "",
+        description: "",
+        category: "",
+        basePrice: "",
+        discount: "",
+        variations: [],
+        images: [],
+        specifications: [],
+      },
+    });
 
   const { fields, append, remove } = useFieldArray({
     control,
@@ -33,6 +43,65 @@ const ProductForm = ({ isUpdateProduct }: ProductFormProps) => {
   });
   const [images, setImages] = useState<ImageData[]>([]);
   const [, setImageIsUploading] = useState<boolean>(false);
+  const [attributes, setAttributes] = useState<Record<string, string>[]>([]);
+  const [specifications, setSpecifications] = useState<
+    { section: string; attributes: { key: string; value: string }[] }[]
+  >([]);
+
+  // Add a new specification section
+  const addSpecificationSection = () => {
+    setSpecifications([...specifications, { section: "", attributes: [] }]);
+  };
+
+  // Update section title
+  const updateSpecificationTitle = (index: number, value: string) => {
+    const updatedSpecs = [...specifications];
+    updatedSpecs[index].section = value;
+    setSpecifications(updatedSpecs);
+  };
+
+  // Add a key-value pair to a section
+  const addKeyValuePair = (index: number) => {
+    const updatedSpecs = [...specifications];
+    updatedSpecs[index].attributes.push({ key: "", value: "" });
+    setSpecifications(updatedSpecs);
+  };
+
+  // Update a key-value pair
+  const updateKeyValue = (
+    sectionIndex: number,
+    keyIndex: number,
+    field: "key" | "value",
+    value: string
+  ) => {
+    const updatedSpecs = [...specifications];
+    updatedSpecs[sectionIndex].attributes[keyIndex][field] = value;
+    setSpecifications(updatedSpecs);
+  };
+
+  // Remove a key-value pair
+  const removeKeyValuePair = (sectionIndex: number, keyIndex: number) => {
+    const updatedSpecs = [...specifications];
+    updatedSpecs[sectionIndex].attributes.splice(keyIndex, 1);
+    reset({ specifications: updatedSpecs });
+    setSpecifications(updatedSpecs);
+  };
+
+  // Remove an entire section
+  const removeSpecificationSection = (index: number) => {
+    const updatedSpecs = [...specifications];
+    updatedSpecs.splice(index, 1);
+    reset({ specifications: updatedSpecs });
+    setSpecifications(updatedSpecs);
+  };
+
+  useEffect(() => {}, []);
+
+  useEffect(() => {
+    dispatch(getCategories());
+  }, [dispatch]);
+
+  const categories = useAppSelector((state) => state.adminCategory.categories);
 
   const handleImageUpload = async (uploadFiles: File[]) => {
     if (uploadFiles) {
@@ -120,7 +189,7 @@ const ProductForm = ({ isUpdateProduct }: ProductFormProps) => {
                 fontWeight: "bold",
                 textTransform: "capitalize",
 
-                fontSize: "x-large",
+                fontSize: "large",
               }}
             >
               General Information
@@ -154,11 +223,28 @@ const ProductForm = ({ isUpdateProduct }: ProductFormProps) => {
                 />
               )}
             />
+            <Controller
+              name="brand"
+              control={control}
+              rules={{ required: "Brand name is required" }}
+              render={({ field, fieldState }) => (
+                <TextField
+                  {...field}
+                  label="Brand"
+                  fullWidth
+                  margin="normal"
+                  error={!!fieldState.error}
+                  helperText={fieldState.error?.message}
+                />
+              )}
+            />
           </Box>
         </Grid>
         {/* Product Images  */}
         <Grid item sm={12} md={6}>
           <Box
+            display={"flex"}
+            flexDirection={"column"}
             sx={{
               p: 3,
               mx: "auto",
@@ -174,7 +260,7 @@ const ProductForm = ({ isUpdateProduct }: ProductFormProps) => {
                 fontWeight: "bold",
                 textTransform: "capitalize",
 
-                fontSize: "x-large",
+                fontSize: "large",
               }}
             >
               Product Images
@@ -182,6 +268,7 @@ const ProductForm = ({ isUpdateProduct }: ProductFormProps) => {
             <Box
               sx={{
                 my: 2,
+                height: "100%",
               }}
             >
               <ImageUpload
@@ -203,6 +290,7 @@ const ProductForm = ({ isUpdateProduct }: ProductFormProps) => {
               boxShadow: 3,
               borderRadius: 2,
               bgcolor: "white",
+              height: "100%",
             }}
           >
             <Typography
@@ -210,8 +298,7 @@ const ProductForm = ({ isUpdateProduct }: ProductFormProps) => {
               sx={{
                 fontWeight: "bold",
                 textTransform: "capitalize",
-
-                fontSize: "x-large",
+                fontSize: "large",
               }}
             >
               Pricing And Stock
@@ -222,14 +309,22 @@ const ProductForm = ({ isUpdateProduct }: ProductFormProps) => {
                 <Controller
                   name="basePrice"
                   control={control}
-                  rules={{ required: "Price is required" }}
-                  render={({ field }) => (
+                  rules={{
+                    required: "Base price is required",
+                    min: {
+                      value: 0,
+                      message: "Nagative value is not allowed",
+                    },
+                  }}
+                  render={({ field, fieldState }) => (
                     <TextField
                       {...field}
                       label="Base Price"
-                      type="string"
+                      type="number"
                       fullWidth
                       margin="normal"
+                      error={!!fieldState.error}
+                      helperText={fieldState.error?.message}
                     />
                   )}
                 />
@@ -238,11 +333,21 @@ const ProductForm = ({ isUpdateProduct }: ProductFormProps) => {
                 <Controller
                   name="discount"
                   control={control}
+                  rules={{
+                    min: {
+                      value: 0,
+                      message: "Nagative value is not allowed",
+                    },
+                    max: {
+                      value: 100,
+                      message: "Discount cannot exceed 100%",
+                    },
+                  }}
                   render={({ field }) => (
                     <TextField
                       {...field}
                       label="Discount"
-                      type="string"
+                      type="number"
                       fullWidth
                       margin="normal"
                       InputProps={{
@@ -262,14 +367,22 @@ const ProductForm = ({ isUpdateProduct }: ProductFormProps) => {
                 <Controller
                   name="stock"
                   control={control}
-                  rules={{ required: "Price is required" }}
-                  render={({ field }) => (
+                  rules={{
+                    required: "Stock details is required",
+                    min: {
+                      value: 0,
+                      message: "Nagative value is not allowed",
+                    },
+                  }}
+                  render={({ field, fieldState }) => (
                     <TextField
                       {...field}
                       label="Stock"
-                      type="string"
+                      type="number"
                       fullWidth
                       margin="normal"
+                      error={!!fieldState.error}
+                      helperText={fieldState.error?.message}
                     />
                   )}
                 />
@@ -278,14 +391,16 @@ const ProductForm = ({ isUpdateProduct }: ProductFormProps) => {
                 <Controller
                   name="sku"
                   control={control}
-                  rules={{ required: "Price is required" }}
-                  render={({ field }) => (
+                  rules={{ required: "sku is required" }}
+                  render={({ field, fieldState }) => (
                     <TextField
                       {...field}
                       label="sku"
                       type="string"
                       fullWidth
                       margin="normal"
+                      error={!!fieldState.error}
+                      helperText={fieldState.error?.message}
                     />
                   )}
                 />
@@ -302,6 +417,7 @@ const ProductForm = ({ isUpdateProduct }: ProductFormProps) => {
               boxShadow: 3,
               borderRadius: 2,
               bgcolor: "white",
+              height: "100%",
             }}
           >
             <Typography
@@ -309,122 +425,399 @@ const ProductForm = ({ isUpdateProduct }: ProductFormProps) => {
               sx={{
                 fontWeight: "bold",
                 textTransform: "capitalize",
-
-                fontSize: "x-large",
+                fontSize: "large",
               }}
             >
               Category
             </Typography>
             <Grid container spacing={2}>
               <Grid item md={12} sm={12}>
-                <Select
-                  labelId="demo-simple-select-label"
-                  id="demo-simple-select"
-                  value={10}
-                  label="Age"
-                  fullWidth
-                  // onChange={handleChange}
-                >
-                  <MenuItem value={10}>Ten</MenuItem>
-                  <MenuItem value={20}>Twenty</MenuItem>
-                  <MenuItem value={30}>Thirty</MenuItem>
-                </Select>
+                <Controller
+                  name="category"
+                  control={control}
+                  render={({ field, fieldState }) => (
+                    <FormControl fullWidth sx={{ my: 2 }}>
+                      <InputLabel id="demo-simple-select-label">
+                        category
+                      </InputLabel>
+                      <Select
+                        {...field}
+                        label="category"
+                        fullWidth
+                        error={!!fieldState.error}
+                        onChange={(e) => {
+                          field.onChange(e);
+                          const selectedCategory = categories.find(
+                            (category) => category._id === e.target.value
+                          );
+                          setAttributes(selectedCategory?.attributes || []);
+                        }}
+                      >
+                        {categories.map((category) => {
+                          return (
+                            <MenuItem value={category._id}>
+                              {category?.name}
+                            </MenuItem>
+                          );
+                        })}
+                        f
+                      </Select>
+                    </FormControl>
+                  )}
+                />
               </Grid>
             </Grid>
           </Box>
         </Grid>
       </Grid>
 
-      {/* Variations */}
-      <Typography variant="h6" sx={{ mt: 2 }}>
-        Product Variations
-      </Typography>
-      {fields.map((item, index) => (
-        <Box
-          key={item.id}
-          sx={{ border: "1px solid #ddd", p: 2, my: 1, borderRadius: 2 }}
-        >
-          <Grid container spacing={2}>
-            <Grid item xs={4}>
-              <Controller
-                name={`variations.${index}.color`}
-                control={control}
-                render={({ field }) => (
-                  <TextField {...field} label="Color" fullWidth />
-                )}
-              />
-            </Grid>
-            <Grid item xs={4}>
-              <Controller
-                name={`variations.${index}.size`}
-                control={control}
-                render={({ field }) => (
-                  <TextField {...field} label="Size" fullWidth />
-                )}
-              />
-            </Grid>
-            <Grid item xs={4}>
-              <Controller
-                name={`variations.${index}.storage`}
-                control={control}
-                render={({ field }) => (
-                  <TextField {...field} label="Storage" fullWidth />
-                )}
-              />
-            </Grid>
-            <Grid item xs={4}>
-              <Controller
-                name={`variations.${index}.price`}
-                control={control}
-                rules={{ required: "Price is required" }}
-                render={({ field }) => (
-                  <TextField {...field} label="Price" type="number" fullWidth />
-                )}
-              />
-            </Grid>
-            <Grid item xs={4}>
-              <Controller
-                name={`variations.${index}.discountPrice`}
-                control={control}
-                render={({ field }) => (
-                  <TextField
-                    {...field}
-                    label="Discount Price"
-                    type="number"
-                    fullWidth
-                  />
-                )}
-              />
-            </Grid>
-            <Grid item xs={4}>
-              <Controller
-                name={`variations.${index}.stock`}
-                control={control}
-                rules={{ required: "Stock is required" }}
-                render={({ field }) => (
-                  <TextField {...field} label="Stock" type="number" fullWidth />
-                )}
-              />
-            </Grid>
-          </Grid>
-          <IconButton onClick={() => remove(index)} color="error">
-            <Delete />
-          </IconButton>
-        </Box>
-      ))}
-      <Button
-        variant="outlined"
-        startIcon={<Add />}
-        onClick={() => append({ price: 0, stock: 0 })}
-        sx={{ mt: 2 }}
-      >
-        Add Variation
-      </Button>
+      {!!attributes.length && (
+        <Grid container spacing={2} sx={{ mt: 1 }}>
+          {/* Product Pricing and Stock Information  */}
+          <Grid item md={12} sm={12}>
+            <Box
+              sx={{
+                p: 3,
+                mx: "auto",
+                boxShadow: 3,
+                borderRadius: 2,
+                bgcolor: "white",
+                height: "100%",
+              }}
+            >
+              <Box display={"flex"} justifyContent="space-between" width="100%">
+                <Typography
+                  variant="h6"
+                  sx={{
+                    fontWeight: "bold",
+                    textTransform: "capitalize",
+                    fontSize: "large",
+                  }}
+                >
+                  Product Variations
+                </Typography>
 
-      {/* Submit Button */}
-      <Button type="submit" variant="contained" fullWidth sx={{ mt: 3 }}>
-        {isUpdateProduct ? "Update Product" : "Create Product"}
-      </Button>
+                <Button
+                  variant="outlined"
+                  startIcon={<Add />}
+                  onClick={() => {
+                    let defaultValues = {};
+                    attributes.forEach(
+                      (attribute) =>
+                        (defaultValues = {
+                          ...defaultValues,
+                          [attribute.name]: "",
+                        })
+                    );
+                    append({ ...defaultValues });
+                  }}
+                  sx={{ mt: 2 }}
+                  color="secondary"
+                >
+                  Add
+                </Button>
+              </Box>
+              {/* Base Price & Discount Price */}
+              {fields.map((item, index) => (
+                <Box
+                  key={item.id}
+                  sx={{
+                    border: "1px solid #ddd",
+                    p: 2,
+                    my: 1,
+                    borderRadius: 2,
+                    width: "100%",
+                  }}
+                  display="flex"
+                  flexDirection={"column"}
+                  // flexWrap={"wrap"}
+                >
+                  <Box sx={{ padding: 1, marginBottom: 1 }}>
+                    <Typography variant="subtitle1">{`Variation ${
+                      index + 1
+                    }`}</Typography>
+                  </Box>
+                  <Box display={"flex"}>
+                    <Box display={"flex"} gap={1} flexWrap={"wrap"}>
+                      {attributes.map((attribute) => (
+                        <Box>
+                          <Controller
+                            name={`variations.${index}.${attribute.name}`}
+                            control={control}
+                            rules={{
+                              required: `${attribute.name} is required`,
+                            }}
+                            render={({ field, fieldState }) => (
+                              <TextField
+                                {...field}
+                                label={`${attribute.name}`}
+                                fullWidth
+                                error={!!fieldState.error}
+                                helperText={fieldState.error?.message}
+                              />
+                            )}
+                          />
+                        </Box>
+                      ))}
+                      <Box>
+                        <Controller
+                          name={`variations.${index}.price`}
+                          control={control}
+                          rules={{
+                            required: "Price is required",
+                            min: {
+                              value: 0,
+                              message: "Nagative value is not allowed",
+                            },
+                          }}
+                          render={({ field, fieldState }) => (
+                            <TextField
+                              {...field}
+                              label="Price"
+                              type="number"
+                              fullWidth
+                              error={!!fieldState.error}
+                              helperText={fieldState.error?.message}
+                            />
+                          )}
+                        />
+                      </Box>
+                      <Box>
+                        <Controller
+                          name={`variations.${index}.discount`}
+                          control={control}
+                          rules={{
+                            required: "Discount is required",
+                            min: {
+                              value: 0,
+                              message: "Nagative value is not allowed",
+                            },
+                            max: {
+                              value: 100,
+                              message: "Discount cannot exceed 100%",
+                            },
+                          }}
+                          render={({ field, fieldState }) => (
+                            <TextField
+                              {...field}
+                              label="Discount"
+                              type="number"
+                              fullWidth
+                              error={!!fieldState.error}
+                              helperText={fieldState.error?.message}
+                              InputProps={{
+                                inputProps: { min: 0, max: 100 },
+                                endAdornment: (
+                                  <Typography
+                                    variant="h6"
+                                    sx={{ fontWeight: 50 }}
+                                  >
+                                    %
+                                  </Typography>
+                                ),
+                              }}
+                            />
+                          )}
+                        />
+                      </Box>
+                      <Box>
+                        <Controller
+                          name={`variations.${index}.stock`}
+                          control={control}
+                          rules={{
+                            required: "Stock is required",
+                            min: {
+                              value: 0,
+                              message: "Nagative value is not allowed",
+                            },
+                          }}
+                          render={({ field, fieldState }) => (
+                            <TextField
+                              {...field}
+                              label="Stock"
+                              type="number"
+                              fullWidth
+                              error={!!fieldState.error}
+                              helperText={fieldState.error?.message}
+                            />
+                          )}
+                        />
+                      </Box>
+                    </Box>
+                    <Box>
+                      <IconButton onClick={() => remove(index)} color="error">
+                        <Delete />
+                      </IconButton>
+                    </Box>
+                  </Box>
+                </Box>
+              ))}
+            </Box>
+          </Grid>
+        </Grid>
+      )}
+      <Grid container spacing={2} sx={{ mt: 1 }}>
+        {/* Product Pricing and Stock Information  */}
+        <Grid item md={12} sm={12}>
+          <Box
+            sx={{
+              p: 3,
+              mx: "auto",
+              boxShadow: 3,
+              borderRadius: 2,
+              bgcolor: "white",
+              height: "100%",
+            }}
+          >
+            <Box display={"flex"} justifyContent="space-between" width="100%">
+              <Typography
+                variant="h6"
+                sx={{
+                  fontWeight: "bold",
+                  textTransform: "capitalize",
+                  fontSize: "large",
+                }}
+              >
+                Product Specifications
+              </Typography>
+              <Button
+                variant="outlined"
+                startIcon={<Add />}
+                onClick={() => {
+                  addSpecificationSection();
+                }}
+                sx={{ mt: 2 }}
+                color="secondary"
+              >
+                Add Section
+              </Button>
+            </Box>
+            <Box marginTop={2}>
+              {specifications.map((spec, index) => (
+                <Accordion key={index} sx={{ mt: 1 }}>
+                  <AccordionSummary expandIcon={<ExpandMore />}>
+                    <Controller
+                      name={`specifications.${index}.section`}
+                      control={control}
+                      rules={{ required: "Specification title is required" }}
+                      render={({ field, fieldState }) => (
+                        <TextField
+                          {...field}
+                          label="Specification Title"
+                          fullWidth
+                          variant="standard"
+                          error={!!fieldState.error}
+                          helperText={fieldState.error?.message}
+                          onChange={(e) => {
+                            field.onChange(e);
+                            updateSpecificationTitle(index, e.target.value);
+                          }}
+                        />
+                      )}
+                    />
+                    <IconButton
+                      onClick={() => removeSpecificationSection(index)}
+                      color="error"
+                    >
+                      <Delete />
+                    </IconButton>
+                  </AccordionSummary>
+                  <AccordionDetails>
+                    {spec.attributes.length === 0 && (
+                      <Typography color="error" variant="body2">
+                        Each section must have at least one attribute.
+                      </Typography>
+                    )}
+                    {spec.attributes.map((detail, keyIndex) => (
+                      <Box
+                        key={keyIndex}
+                        sx={{
+                          display: "flex",
+                          gap: "10px",
+                          alignItems: "center",
+                          marginBottom: "10px",
+                        }}
+                      >
+                        <Controller
+                          name={`specifications.${index}.attributes.${keyIndex}.key`}
+                          control={control}
+                          rules={{ required: "Key is required" }}
+                          render={({ field, fieldState }) => (
+                            <TextField
+                              {...field}
+                              label="Key"
+                              variant="outlined"
+                              size="small"
+                              error={!!fieldState.error}
+                              helperText={fieldState.error?.message}
+                              onChange={(e) => {
+                                field.onChange(e);
+                                updateKeyValue(
+                                  index,
+                                  keyIndex,
+                                  "key",
+                                  e.target.value
+                                );
+                              }}
+                            />
+                          )}
+                        />
+                        <Controller
+                          name={`specifications.${index}.attributes.${keyIndex}.value`}
+                          control={control}
+                          rules={{ required: "Value is required" }}
+                          render={({ field, fieldState }) => (
+                            <TextField
+                              {...field}
+                              label="Value"
+                              variant="outlined"
+                              size="small"
+                              error={!!fieldState.error}
+                              helperText={fieldState.error?.message}
+                              onChange={(e) => {
+                                field.onChange(e);
+                                updateKeyValue(
+                                  index,
+                                  keyIndex,
+                                  "value",
+                                  e.target.value
+                                );
+                              }}
+                            />
+                          )}
+                        />
+                        <IconButton
+                          onClick={() => removeKeyValuePair(index, keyIndex)}
+                          color="error"
+                        >
+                          <Delete />
+                        </IconButton>
+                      </Box>
+                    ))}
+                    <Button
+                      onClick={() => addKeyValuePair(index)}
+                      variant="contained"
+                      color="primary"
+                    >
+                      + Add Attribute
+                    </Button>
+                  </AccordionDetails>
+                </Accordion>
+              ))}
+            </Box>
+          </Box>
+        </Grid>
+      </Grid>
+      <Box display={"flex"} justifyContent="flex-end">
+        <Button
+          type="submit"
+          variant="contained"
+          sx={{ mt: 3 }}
+          color="secondary"
+        >
+          {isUpdateProduct ? "Update Product" : "Add Product"}
+        </Button>
+      </Box>
     </Box>
   );
 };
