@@ -1,6 +1,7 @@
 import { Box, Button, Typography } from "@mui/material";
 import AddOutlinedIcon from "@mui/icons-material/AddOutlined";
 import { useNavigate } from "react-router-dom";
+import React from "react";
 
 const CategoryHeader = () => {
   const navigate = useNavigate();
@@ -29,4 +30,4 @@ const CategoryHeader = () => {
   );
 };
 
-export default CategoryHeader;
+export default React.memo(CategoryHeader);

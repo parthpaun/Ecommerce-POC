@@ -1,4 +1,4 @@
-import { FC, useEffect, memo, useState } from "react";
+import { FC, useEffect, memo, useState, useMemo, useCallback } from "react";
 import { Container } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "../../../../redux/hooks";
 import {
@@ -25,25 +25,30 @@ const Products: FC = () => {
   useEffect(() => {
     dispatch(getProducts());
   }, [dispatch]);
-  const handleDeleteProduct = (id: string) => {
-    setDeleteProductOpen({ open: true, id: id });
-  };
 
-  const deleteProduct = () => {
+  const handleDeleteProduct = useCallback((id: string) => {
+    setDeleteProductOpen({ open: true, id });
+  }, []);
+
+  const deleteProduct = useCallback(() => {
     dispatch(deleteProductAction(deleteProductOpen.id));
     setDeleteProductOpen({ open: false, id: "" });
-  };
+  }, [dispatch, deleteProductOpen.id]);
+
+  const handleSetOpen = useCallback((open: boolean) => {
+    setDeleteProductOpen({ open, id: "" });
+  }, []);
 
   return (
     <Container component="main" maxWidth="xl" className="categories">
-      <ProductHeader />
+      {useMemo(() => <ProductHeader />, [])}
       <ProductTable
         data={productState?.products}
         handleDeleteProduct={handleDeleteProduct}
       />
       <ConfirmationPopup
         open={deleteProductOpen.open}
-        setOpen={(open) => setDeleteProductOpen({ open: open, id: "" })}
+        setOpen={handleSetOpen}
         message="Are you sure You want to delete this category"
         handleConfirm={deleteProduct}
         title="Delete category"

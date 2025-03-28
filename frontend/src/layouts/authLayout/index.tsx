@@ -1,8 +1,9 @@
 import { Outlet } from "react-router-dom";
 import { Box, Paper } from "@mui/material";
 import "./authLayout.css";
+import { memo } from "react";
 
-export default function AuthLayout() {
+const AuthLayout = memo(function AuthLayout() {
   return (
     <Box className="auth-layout">
       <Paper elevation={6} square={false} className="auth-paper">
@@ -10,4 +11,5 @@ export default function AuthLayout() {
       </Paper>
     </Box>
   );
-}
+});
+export default AuthLayout;

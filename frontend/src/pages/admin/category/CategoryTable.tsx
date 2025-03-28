@@ -8,6 +8,7 @@ import {
   IconButton,
 } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
+import { useCallback, useMemo } from "react";
 
 type Category = {
   _id: string;
@@ -24,8 +25,39 @@ type Props = {
 };
 const Table = (props: Props) => {
   const { data, handleDeleteCategory } = props;
+
+  const memoizedHandleDelete = useCallback(
+    (id: string) => {
+      handleDeleteCategory(id);
+    },
+    [handleDeleteCategory]
+  );
+
+  const paperStyle = useMemo(() => ({ padding: "1rem" }), []);
+
+  const memoizedTableBody = useMemo(() => (
+    <TableBody>
+      {data?.map((category, index) => (
+        <TableRow key={category?._id}>
+          <TableCell>{index + 1}</TableCell>
+          <TableCell>{category?.name}</TableCell>
+          <TableCell>{category?.parentCategory?.name}</TableCell>
+          <TableCell>{category?.description}</TableCell>
+          <TableCell>
+            <IconButton
+              color="error"
+              onClick={() => memoizedHandleDelete(category?._id)}
+            >
+              <DeleteIcon />
+            </IconButton>
+          </TableCell>
+        </TableRow>
+      ))}
+    </TableBody>
+  ), [data, memoizedHandleDelete]);
+
   return (
-    <Paper elevation={2} style={{ padding: "1rem" }}>
+    <Paper elevation={2} style={paperStyle}>
       <MuiTable>
         <TableHead>
           <TableRow>
@@ -36,28 +68,7 @@ const Table = (props: Props) => {
             <TableCell>Action</TableCell>
           </TableRow>
         </TableHead>
-        <TableBody>
-          {data?.map((category, index) => {
-            return (
-              <TableRow key={category?._id}>
-                <TableCell>{index + 1}</TableCell>
-                <TableCell>{category?.name}</TableCell>
-                <TableCell>{category?.parentCategory?.name}</TableCell>
-                <TableCell>{category?.description}</TableCell>
-                <TableCell>
-                  {
-                    <IconButton
-                      color="error"
-                      onClick={() => handleDeleteCategory(category?._id)}
-                    >
-                      <DeleteIcon />
-                    </IconButton>
-                  }
-                </TableCell>
-              </TableRow>
-            );
-          })}
-        </TableBody>
+        {memoizedTableBody}
       </MuiTable>
     </Paper>
   );

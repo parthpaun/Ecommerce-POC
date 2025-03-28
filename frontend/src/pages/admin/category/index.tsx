@@ -1,4 +1,4 @@
-import { FC, useEffect, memo, useState } from "react";
+import { FC, useEffect, memo, useState, useCallback, useMemo } from "react";
 import { Container } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "../../../redux/hooks";
 import {
@@ -24,25 +24,31 @@ const Categories: FC = () => {
   useEffect(() => {
     dispatch(getCategories());
   }, []);
-  const handleDeleteCategory = (id: string) => {
+  const handleDeleteCategory = useCallback((id: string) => {
     setDeleteCategoryOpen({ open: true, id: id });
-  };
+  }, []);
 
-  const deleteCategory = () => {
+  const deleteCategory = useCallback(() => {
     dispatch(deleteCategoryAction(deleteCategoryOpen.id));
     setDeleteCategoryOpen({ open: false, id: "" });
-  };
+  }, [dispatch, deleteCategoryOpen.id]);
+
+  const setDeleteOpen = useCallback((open: boolean) => {
+    setDeleteCategoryOpen({ open: open, id: "" });
+  }, []);
+
+  const memoizedCategories = useMemo(() => categoryState?.categories, [categoryState?.categories]);
 
   return (
     <Container component="main" maxWidth="xl" className="categories">
       <CategoryHeader />
       <CategoryTable
-        data={categoryState?.categories}
+        data={memoizedCategories}
         handleDeleteCategory={handleDeleteCategory}
       />
       <ConfirmationPopup
         open={deleteCategoryOpen.open}
-        setOpen={(open) => setDeleteCategoryOpen({ open: open, id: "" })}
+        setOpen={setDeleteOpen}
         message="Are you sure You want to delete this category"
         handleConfirm={deleteCategory}
         title="Delete category"

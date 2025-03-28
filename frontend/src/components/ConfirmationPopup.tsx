@@ -55,11 +55,13 @@ export default function ConfirmPopup({
         aria-describedby="alert-dialog-slide-description"
       >
         <DialogTitle>{title}</DialogTitle>
-        <DialogContent>
-          <DialogContentText id="alert-dialog-slide-description">
-            {message}
-          </DialogContentText>
-        </DialogContent>
+        {React.useMemo(() => (
+          <DialogContent>
+            <DialogContentText id="alert-dialog-slide-description">
+              {message}
+            </DialogContentText>
+          </DialogContent>
+        ), [message])}
         <DialogActions>
           <Button onClick={handleClose} variant="contained">
             {cancelButtonText}

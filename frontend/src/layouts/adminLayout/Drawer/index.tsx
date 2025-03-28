@@ -59,6 +59,18 @@ const DrawerComponent = ({ open, handleDrawerClose }: DrawerProps) => {
     navigate(item?.url);
   };
 
+  const memoizedDrawerHeader = React.useMemo(() => (
+    <DrawerHeader>
+      <IconButton onClick={handleDrawerClose} sx={{ color: "#FFFFFF" }}>
+        {theme.direction === "ltr" ? (
+          <ChevronLeftIcon />
+        ) : (
+          <ChevronRightIcon />
+        )}
+      </IconButton>
+    </DrawerHeader>
+  ), [handleDrawerClose, theme.direction]);
+
   return (
     <Drawer
       sx={{
@@ -75,15 +87,7 @@ const DrawerComponent = ({ open, handleDrawerClose }: DrawerProps) => {
       anchor="left"
       open={open}
     >
-      <DrawerHeader>
-        <IconButton onClick={handleDrawerClose} sx={{ color: "#FFFFFF" }}>
-          {theme.direction === "ltr" ? (
-            <ChevronLeftIcon />
-          ) : (
-            <ChevronRightIcon />
-          )}
-        </IconButton>
-      </DrawerHeader>
+      {memoizedDrawerHeader}
       <Divider sx={{ borderColor: "#374151" }} />
       <List>
         {adminMenuItems.map((item) => {
