@@ -8,9 +8,11 @@ import {
 import CategoryHeader from "./CategoryHeader";
 import CategoryTable from "./CategoryTable";
 import ConfirmationPopup from "../../../components/ConfirmationPopup";
+import { useNavigate } from "react-router-dom";
 
 const Categories: FC = () => {
   const dispatch = useAppDispatch();
+  const navigate = useNavigate();
   const [deleteCategoryOpen, setDeleteCategoryOpen] = useState({
     open: false,
     id: "",
@@ -28,6 +30,10 @@ const Categories: FC = () => {
     setDeleteCategoryOpen({ open: true, id: id });
   }, []);
 
+  const handleUpdateCategory = useCallback((id: string) => {
+    navigate(`/admin/categories/update/${id}`);
+  }, []);
+
   const deleteCategory = useCallback(() => {
     dispatch(deleteCategoryAction(deleteCategoryOpen.id));
     setDeleteCategoryOpen({ open: false, id: "" });
@@ -37,7 +43,10 @@ const Categories: FC = () => {
     setDeleteCategoryOpen({ open: open, id: "" });
   }, []);
 
-  const memoizedCategories = useMemo(() => categoryState?.categories, [categoryState?.categories]);
+  const memoizedCategories = useMemo(
+    () => categoryState?.categories,
+    [categoryState?.categories],
+  );
 
   return (
     <Container component="main" maxWidth="xl" className="categories">
@@ -45,6 +54,7 @@ const Categories: FC = () => {
       <CategoryTable
         data={memoizedCategories}
         handleDeleteCategory={handleDeleteCategory}
+        handleUpdateCategory={handleUpdateCategory}
       />
       <ConfirmationPopup
         open={deleteCategoryOpen.open}

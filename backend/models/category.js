@@ -11,10 +11,15 @@ const categorySchema = new mongoose.Schema(
     attributes: [
       {
         name: { type: String, required: true }, // E.g., "RAM", "Storage", "Color"
+        options: { type: [String], default: [] }, // E.g., ["8GB", "16GB"] for RAM
       },
     ],
-    image: { type: String }, // Category icon/image URL (optional)
-    description: { type: String }, // Optional description
+    image: {
+      name: { type: String, default: null },
+      url: { type: String, default: null },
+      key: { type: String, default: null }
+    }, // Category icon/image (optional)
+    description: { type: String, default: "" }, // Optional description
     isActive: { type: Boolean, default: true }, // Active/inactive status
   },
   { timestamps: true }

@@ -13,374 +13,551 @@ import {
   InputLabel,
   Snackbar,
   Alert,
+  Chip,
+  Stack,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Paper,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle,
 } from "@mui/material";
-import { Add, Category, Delete } from "@mui/icons-material";
+import { Add, Delete, Category, ArrowBack } from "@mui/icons-material";
 import ImageUpload from "../../../../components/admin/ImageUpload";
 import { apiCall } from "../../../../utils/helperFunctions";
 import { useAppDispatch, useAppSelector } from "../../../../redux/hooks";
 import {
   addCategory,
   getCategories,
+  getCategoryById,
+  updateCategory,
 } from "../../../../redux/admin/category/categoryAction";
+import { useNavigate, useParams } from "react-router-dom";
 
 const CategoryForm = ({ isUpdate }: CategoryFormProps) => {
+  const navigate = useNavigate();
   const dispatch = useAppDispatch();
 
-  const { control, handleSubmit, setValue, getValues, reset } =
+  const { categoryId } = useParams<{ categoryId: string }>(); // ✅ ADDED
+  const category = useAppSelector((state) => state.adminCategory.category);
+
+  const { control, handleSubmit, reset, getValues, setValue } =
     useForm<CategoryFormValues>({
       defaultValues: {
         name: "",
         description: "",
         parentCategory: "",
         attributes: [],
-        images: [],
+        image: null,
       },
     });
 
   useEffect(() => {
-    dispatch(getCategories());
-  }, [dispatch]);
+    if (category) {
+      reset({
+        name: category?.name || "",
+        description: category?.description || "",
+        parentCategory: category?.parentCategory?._id || "",
+        attributes: Array.isArray(category?.attributes)
+          ? category.attributes
+          : [],
+        image: category?.image || null,
+      });
+    }
+    // category.image is a string (key only), so we can't populate the images array with url
+    // The images array will be populated when the user uploads a new image
+    setImages(
+      category?.image
+        ? [
+            {
+              key: category.image.key ?? null,
+              name: category.image.name ?? null,
+              url: category.image.url ?? null,
+              imageUrl: category.image.url ?? null,
+            },
+          ]
+        : [],
+    );
+  }, [category, reset]);
 
-  const categories = useAppSelector((state) => state.adminCategory.categories);
+  useEffect(() => {
+    if (isUpdate && categoryId) {
+      dispatch(getCategoryById(categoryId));
+    }
+  }, [dispatch, isUpdate, categoryId]);
+  useEffect(() => {
+    dispatch(getCategories(categoryId));
+  }, [dispatch, categoryId]);
 
-  const { fields, append, remove } = useFieldArray({
+  const categories = useAppSelector((s) => s.adminCategory.categories);
+  const { fields, append, update, remove } = useFieldArray({
     control,
     name: "attributes",
   });
-  const [images, setImages] = useState<ImageData[]>([]);
-  const [, setImageIsUploading] = useState<boolean>(false);
-  const [notification, setNotification] = useState<{
-    isOpen: boolean;
-    message: string;
-    isError: boolean;
-  }>({
+
+  const [images, setImages] = useState<ImageItem[]>([]);
+  const [isUploading, setIsUploading] = useState(false);
+  const [notification, setNotification] = useState({
     isOpen: false,
     message: "",
     isError: false,
   });
+  const [deleteIndex, setDeleteIndex] = useState<number | null>(null);
 
   const handleImageUpload = async (uploadFiles: File[]) => {
-    if (uploadFiles) {
-      const files = Array.from(uploadFiles);
-      const imageFormData = new FormData();
-      if (files.length > 0) {
-        setImageIsUploading(true);
-        files.forEach((file) => {
-          imageFormData.append("images", file);
-        });
-        const uploadedImages = await apiCall(
-          "POST",
-          "/upload/category",
-          imageFormData,
-          { "Content-Type": "multipart/form-data" }
-        );
-        setImageIsUploading(false);
-        if (uploadedImages.images) {
-          const imageWithPreview = uploadedImages.images.map(
-            (image: FileResponse, index: number) => ({
-              ...image,
-              imageUrl: URL.createObjectURL(files[index]),
-            })
-          );
-          const existingImages = getValues("images");
-          const allImages = [...existingImages, ...imageWithPreview];
-          setValue("images", allImages);
-          setImages(allImages);
-        }
+    // Prevent multiple simultaneous uploads
+    if (isUploading) {
+      return;
+    }
+
+    const files = Array.from(uploadFiles);
+    if (files.length === 0) return;
+    setIsUploading(true);
+
+    try {
+      const formData = new FormData();
+      files.forEach((f) => formData.append("images", f));
+
+      const res = await apiCall("POST", "/upload/category", formData, {
+        "Content-Type": "multipart/form-data",
+      });
+
+      if (res.images) {
+        const mapped = res?.images?.map((img: FileResponse, i: number) => ({
+          ...img,
+          imageUrl: URL.createObjectURL(files[i]),
+        }));
+        setValue("image", mapped[0] || null);
+        setImages(mapped);
       }
+    } catch (error) {
+      setNotification({
+        isOpen: true,
+        message: "Failed to upload image!",
+        isError: true,
+      });
+    } finally {
+      setIsUploading(false);
     }
   };
 
-  const deleteImage = (data: ImageData) => {
-    const updatedImages = images.filter(
-      (imageData) => imageData.key !== data.key
-    ); // Remove image preview
-    setValue("images", updatedImages);
-    setImages(updatedImages);
+  const deleteImage = () => {
+    setValue("image", null);
+    setImages([]);
   };
 
-  const onSubmit = (value: CategoryFormValues) => {
+  const onSubmit = (data: CategoryFormValues) => {
     const payload = {
-      ...value,
-      parentCategory: value.parentCategory || null,
-      image: value.images[0]?.key || null,
+      ...data,
+      parentCategory: data.parentCategory
+        ? categories.find((c) => c._id === data.parentCategory)
+        : null,
+      image: getValues("image"),
+      attributes: data?.attributes?.map((a) => ({
+        name: a.name,
+        options: a.options,
+      })),
     };
-    dispatch(addCategory(payload))
-      .then(() => {
-        reset();
-        setImages([]);
-        setNotification({
-          isOpen: true,
-          message: "Category added successfully",
-          isError: false,
-        });
-      })
-      .catch((error) => {
-        setNotification({
-          isOpen: true,
-          message: error.message,
-          isError: true,
-        });
-      });
+
+    if (isUpdate && categoryId) {
+      dispatch(updateCategory({ ...payload, id: categoryId }))
+        .then(() => {
+          setNotification({
+            isOpen: true,
+            message: "Category updated successfully!",
+            isError: false,
+          });
+          setTimeout(() => {
+            navigate("/admin/categories");
+          }, 1000);
+        })
+        .catch((e) =>
+          setNotification({ isOpen: true, message: e.message, isError: true }),
+        );
+      return;
+    } else {
+      dispatch(addCategory(payload))
+        .then(() => {
+          reset();
+          setImages([]);
+          setNotification({
+            isOpen: true,
+            message: "Category saved successfully!",
+            isError: false,
+          });
+        })
+        .catch((e) =>
+          setNotification({ isOpen: true, message: e.message, isError: true }),
+        );
+    }
   };
 
-  const handleCloseNotification = () => {
-    setNotification({ message: "", isOpen: false, isError: false });
+  const confirmDeleteAttribute = () => {
+    if (deleteIndex !== null) {
+      remove(deleteIndex);
+      setDeleteIndex(null);
+    }
   };
 
   return (
     <Box
       component="form"
       onSubmit={handleSubmit(onSubmit)}
-      display={"flex"}
-      flexDirection={"column"}
-      gap={2}
-      justifyContent={"space-between"}
-      minHeight={"100%"}
+      sx={{
+        p: 2,
+        minHeight: "100%",
+        display: "flex",
+        flexDirection: "column",
+        gap: 4,
+      }}
     >
-      {/* Header */}
-      <Box
-        sx={{
-          display: "flex",
-          justifyContent: "flex-start",
-          my: 2,
-          alignItems: "center",
-        }}
-      >
-        <Category fontSize="large" />
+      {/* BACK NAVIGATION */}
+      <Stack direction="row" alignItems="center" spacing={1}>
+        <IconButton
+          onClick={() => navigate("/admin/categories")}
+          color="primary"
+        >
+          <ArrowBack sx={{ fontSize: "1.5rem" }} />
+        </IconButton>
         <Typography
           variant="h5"
-          sx={{
-            fontWeight: "bold",
-            textTransform: "uppercase",
-            ml: 1,
-            fontSize: "x-large",
-          }}
+          color="text.primary"
+          fontWeight={600}
+          fontSize={"1rem"}
         >
-          {isUpdate ? "Edit Category" : "Add New Category"}
+          Back to Categories
         </Typography>
-      </Box>
-      <Grid container spacing={2}>
+      </Stack>
+      {/* HEADER */}
+      <Stack direction="row" alignItems="center" spacing={1}>
+        <Category fontSize="large" />
+        <Typography variant="h5" fontWeight="bold">
+          {isUpdate ? "Edit Product Category" : "Add New Product Category"}
+        </Typography>
+      </Stack>
+
+      {/* GENERAL + IMAGE */}
+      <Grid container spacing={3}>
         <Grid item md={6} sm={12}>
-          <Box
-            sx={{
-              p: 3,
-              mx: "auto",
-              boxShadow: 3,
-              borderRadius: 2,
-              bgcolor: "white",
-            }}
-          >
-            <Typography
-              variant="h6"
-              sx={{
-                fontWeight: "bold",
-                textTransform: "capitalize",
+          <Typography variant="h6" fontWeight={600}>
+            Basic Details
+          </Typography>
 
-                fontSize: "x-large",
-              }}
-            >
-              General Information
-            </Typography>
-            <Controller
-              name="name"
-              control={control}
-              rules={{ required: "Category name is required" }}
-              render={({ field, fieldState }) => (
-                <TextField
-                  {...field}
-                  label="Category Name"
-                  fullWidth
-                  margin="normal"
-                  error={!!fieldState.error}
-                  helperText={fieldState.error?.message}
-                />
-              )}
-            />
-            <Controller
-              name="description"
-              control={control}
-              render={({ field }) => (
-                <TextField
-                  {...field}
-                  label="Description"
-                  fullWidth
-                  multiline
-                  rows={3}
-                  margin="normal"
-                />
-              )}
-            />
-
-            <Controller
-              name="parentCategory"
-              control={control}
-              render={({ field, fieldState }) => (
-                <FormControl fullWidth sx={{ my: 2 }} variant="outlined">
-                  <InputLabel id="parent-category-label">
-                    Parent Category
-                  </InputLabel>
-                  <Select
-                    {...field}
-                    label="Parent Category"
-                    fullWidth
-                    error={!!fieldState.error}
-                    labelId="parent-category-label"
-                  >
-                    {categories.map((category) => (
-                      <MenuItem key={category._id} value={category._id}>
-                        {category?.name}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-              )}
-            />
-          </Box>
-        </Grid>
-        {/* Category Image  */}
-        <Grid item sm={12} md={6}>
-          <Box
-            display={"flex"}
-            flexDirection={"column"}
-            sx={{
-              p: 3,
-              mx: "auto",
-              boxShadow: 3,
-              borderRadius: 2,
-              bgcolor: "white",
-              height: "100%",
-            }}
-          >
-            <Typography
-              variant="h6"
-              sx={{
-                fontWeight: "bold",
-                textTransform: "capitalize",
-
-                fontSize: "x-large",
-              }}
-            >
-              Category Image
-            </Typography>
-            <Box
-              sx={{
-                my: 2,
-                height: "100%",
-              }}
-            >
-              <ImageUpload
-                images={images}
-                setImages={handleImageUpload}
-                deleteImage={deleteImage}
-                isMultiple={false}
+          <Controller
+            name="name"
+            control={control}
+            rules={{ required: "Category name is required" }}
+            render={({ field, fieldState }) => (
+              <TextField
+                {...field}
+                label="Category Name"
+                size="medium"
+                fullWidth
+                sx={{ mt: 2 }}
+                error={!!fieldState.error}
+                helperText={fieldState.error?.message}
               />
-            </Box>
-          </Box>
+            )}
+          />
+
+          <Controller
+            name="description"
+            control={control}
+            render={({ field }) => (
+              <TextField
+                {...field}
+                label="Category Description"
+                size="medium"
+                fullWidth
+                multiline
+                rows={3}
+                sx={{ mt: 2 }}
+              />
+            )}
+          />
+
+          <Controller
+            name="parentCategory"
+            control={control}
+            render={({ field }) => (
+              <FormControl fullWidth sx={{ mt: 2 }}>
+                <InputLabel>Select Parent Category (Optional)</InputLabel>
+                <Select {...field} label="Select Parent Category (Optional)">
+                  <MenuItem value="">None</MenuItem>
+                  {categories?.map((c) => (
+                    <MenuItem key={c._id} value={c._id}>
+                      {c.name}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            )}
+          />
         </Grid>
-      </Grid>
-      <Grid container spacing={2} sx={{ mt: 1 }}>
-        <Grid item md={12} sm={12}>
-          <Box
+
+        <Grid item md={6} sm={12}>
+          <Typography variant="h6" fontWeight={600}>
+            Category Image (Optional)
+          </Typography>
+          <Paper
             sx={{
-              p: 3,
-              mx: "auto",
-              boxShadow: 3,
+              mt: 2,
+              p: 2,
+              border: "1px dashed #bbb",
               borderRadius: 2,
-              bgcolor: "white",
+              minHeight: 180,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
             }}
           >
-            <Box
-              display={"flex"}
-              justifyContent={"space-between"}
-              alignItems={"start"}
-            >
-              <Typography
-                variant="h6"
-                sx={{
-                  fontWeight: "bold",
-                  textTransform: "capitalize",
-                  fontSize: "x-large",
-                }}
-              >
-                Attributes
-              </Typography>
-              <Button
-                variant="contained"
-                startIcon={<Add />}
-                onClick={() => append({ name: "" })}
-                color="secondary"
-              >
-                Add
-              </Button>
-            </Box>
-            <Box display={"flex"} flexWrap={"wrap"} gap={2}>
-              {fields.map((item, index) => (
-                <Box key={item.id}>
-                  <Box
-                    key={item.id}
-                    display={"flex"}
-                    sx={{
-                      border: "1px solid #ddd",
-                      p: 2,
-                      my: 1,
-                      borderRadius: 2,
-                    }}
-                  >
-                    <Controller
-                      name={`attributes.${index}.name`}
-                      control={control}
-                      render={({ field, fieldState }) => (
-                        <TextField
-                          {...field}
-                          label="Name"
-                          fullWidth
-                          error={!!fieldState.error}
-                          helperText={fieldState.error?.message}
-                        />
-                      )}
-                      rules={{ required: "Attribute name is required" }}
-                    />
-                    <IconButton onClick={() => remove(index)} color="error">
-                      <Delete />
-                    </IconButton>
-                  </Box>
-                </Box>
-              ))}
-            </Box>
-          </Box>
+            <ImageUpload
+              images={images}
+              setImages={handleImageUpload}
+              deleteImage={deleteImage}
+              isMultiple={false}
+            />
+          </Paper>
         </Grid>
       </Grid>
 
-      {/* attributes */}
-
-      {/* Submit Button */}
-      <Box
-        display={"flex"}
-        justifyContent={"flex-end"}
-        alignItems={"center"}
-        sx={{ mt: 3 }}
-      >
-        <Button
-          type="submit"
-          variant="contained"
-          sx={{ mt: 3 }}
-          color="secondary"
+      {/* VARIANT OPTIONS (ATTRIBUTES) */}
+      <Box>
+        <Stack
+          direction="row"
+          justifyContent="space-between"
+          alignItems="center"
+          sx={{ mb: 2 }}
         >
+          <Box>
+            <Typography variant="h6" fontWeight={600}>
+              Variant Options
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              Define fields used later to create product variants. Values remain
+              unlimited and product-specific.
+            </Typography>
+          </Box>
+          <Button
+            startIcon={<Add />}
+            variant="outlined"
+            onClick={() => append({ name: "", options: [] })}
+          >
+            Add Specification
+          </Button>
+        </Stack>
+
+        {fields.length === 0 ? (
+          <Alert severity="info">
+            No variant fields added yet. Click “Add Field” to start.
+          </Alert>
+        ) : (
+          <TableContainer
+            component={Paper}
+            sx={{ borderRadius: 2, boxShadow: 1 }}
+          >
+            <Table>
+              <TableHead>
+                <TableRow sx={{ bgcolor: "rgba(0,0,0,0.03)" }}>
+                  <TableCell>
+                    <b>Name </b>
+                  </TableCell>
+                  <TableCell>
+                    <b>Allowed Values (Product Defines These Later)</b>
+                  </TableCell>
+                  <TableCell align="center">
+                    <b>Remove</b>
+                  </TableCell>
+                </TableRow>
+              </TableHead>
+
+              <TableBody>
+                {fields?.map((attr, index) => (
+                  <TableRow
+                    key={attr.id}
+                    sx={{ "& td": { verticalAlign: "top", paddingTop: 2 } }}
+                  >
+                    {/* FIELD NAME */}
+                    <TableCell width={250}>
+                      <Controller
+                        name={`attributes.${index}.name`}
+                        control={control}
+                        rules={{ required: "Specification name is required" }}
+                        render={({ field, fieldState }) => {
+                          return (
+                            <TextField
+                              {...field}
+                              placeholder="e.g. Size, Color, RAM, Material"
+                              size="small"
+                              fullWidth
+                              sx={{ bgcolor: "rgba(0,0,0,0.01)" }}
+                              error={!!fieldState.error}
+                              helperText={fieldState.error?.message}
+                            />
+                          );
+                        }}
+                      />
+                    </TableCell>
+
+                    {/* VALUES INPUT + TAGS */}
+                    <TableCell>
+                      {/* MULTI VALUE INPUT — NO EXTRA SPACE ABOVE */}
+                      <Controller
+                        name={`attributes.${index}.options`}
+                        control={control}
+                        render={({ field }) => (
+                          <TextField
+                            placeholder='Add values like: "Red, Blue, 32GB, XL"'
+                            size="small"
+                            sx={{ width: 280 }}
+                            inputRef={field.ref} // 👈 important
+                            onKeyDown={(e) => {
+                              const target = e.target as HTMLInputElement;
+                              if (e.key === "Enter" && target.value.trim()) {
+                                e.preventDefault();
+                                const value = target.value.trim();
+                                if (!value) return;
+
+                                const newOptions = value
+                                  ?.split(",")
+                                  ?.map((o) => o.trim())
+                                  ?.filter(Boolean);
+                                const current =
+                                  getValues(`attributes.${index}.options`) ||
+                                  [];
+                                const merged = [
+                                  ...new Set([...current, ...newOptions]),
+                                ];
+
+                                const fieldName = getValues(
+                                  `attributes.${index}.name`,
+                                ); // 👈 keep name
+                                update(index, {
+                                  name: fieldName,
+                                  options: merged,
+                                }); // 👈 update only options
+                                setValue(`attributes.${index}.options`, merged);
+
+                                target.value = "";
+                              }
+                            }}
+                            onBlur={(e) => {
+                              const input = e.target as HTMLInputElement;
+                              const value = input.value.trim();
+                              if (!value) return;
+
+                              const newOptions = value
+                                ?.split(",")
+                                ?.map((o) => o.trim())
+                                ?.filter(Boolean);
+                              const current =
+                                getValues(`attributes.${index}.options`) || [];
+                              const merged = [
+                                ...new Set([...current, ...newOptions]),
+                              ];
+
+                              const fieldName = getValues(
+                                `attributes.${index}.name`,
+                              ); // 👈 keep name
+                              update(index, {
+                                name: fieldName,
+                                options: merged,
+                              }); // 👈 don't touch name
+                              setValue(`attributes.${index}.options`, merged);
+
+                              input.value = "";
+                            }}
+                          />
+                        )}
+                      />
+
+                      {/* TAGS ALWAYS AT BOTTOM, LEFT ALIGNED */}
+                      <Stack
+                        direction="row"
+                        flexWrap="wrap"
+                        gap={1}
+                        sx={{ justifyContent: "flex-start", mt: 1 }}
+                      >
+                        {(getValues(`attributes.${index}.options`) || [])?.map(
+                          (opt) => (
+                            <Chip
+                              key={opt}
+                              label={opt}
+                              onDelete={() => {
+                                const current =
+                                  getValues(`attributes.${index}.options`) ||
+                                  [];
+                                update(index, {
+                                  name: attr.name,
+                                  options: current.filter((o) => o !== opt),
+                                });
+                                setValue(
+                                  `attributes.${index}.options`,
+                                  current.filter((o) => o !== opt),
+                                );
+                              }}
+                            />
+                          ),
+                        )}
+                      </Stack>
+                    </TableCell>
+
+                    {/* DELETE BUTTON */}
+                    <TableCell align="center" width={90}>
+                      <IconButton
+                        onClick={() => setDeleteIndex(index)}
+                        color="error"
+                      >
+                        <Delete />
+                      </IconButton>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        )}
+      </Box>
+
+      {/* DELETE CONFIRMATION */}
+      <Dialog open={deleteIndex !== null} onClose={() => setDeleteIndex(null)}>
+        <DialogTitle>Delete Field?</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            This will remove the variant field. This action cannot be undone.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setDeleteIndex(null)}>Cancel</Button>
+          <Button onClick={confirmDeleteAttribute} color="error">
+            Delete
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* SUBMIT */}
+      <Stack direction="row" justifyContent="flex-end">
+        <Button type="submit" variant="contained" size="large">
           {isUpdate ? "Update Category" : "Add Category"}
         </Button>
-      </Box>
+      </Stack>
+
+      {/* NOTIFICATION */}
       <Snackbar
         open={notification.isOpen}
         autoHideDuration={2000}
-        onClose={handleCloseNotification}
+        onClose={() => setNotification({ ...notification, isOpen: false })}
         anchorOrigin={{ vertical: "top", horizontal: "right" }}
       >
         <Alert
-          onClose={handleCloseNotification}
           severity={notification.isError ? "error" : "success"}
           variant="filled"
-          sx={{ width: "100%" }}
         >
           {notification.message}
         </Alert>

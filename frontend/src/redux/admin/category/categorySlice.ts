@@ -1,18 +1,30 @@
 import { createSlice } from "@reduxjs/toolkit";
-import { addCategory, deleteCategory, getCategories } from "./categoryAction";
+import {
+  addCategory,
+  deleteCategory,
+  getCategories,
+  getCategoryById,
+  updateCategory,
+} from "./categoryAction";
 
 type CategoryData = {
   name: string;
   description: string;
   _id: string;
   attributes: Record<string, string>[];
+  parentCategory?: { _id: string; name: string };
+  image?: {
+    name?: string | null;
+    url?: string | null;
+    key?: string | null;
+  } | null;
 };
 interface Category {
   categories: CategoryData[];
   isLoading: boolean;
   error: string | undefined;
   successMessage: string;
-  category: Record<string, string>;
+  category: CategoryData | null;
 }
 
 const initialState: Category = {
@@ -20,7 +32,7 @@ const initialState: Category = {
   successMessage: "",
   isLoading: false,
   error: "",
-  category: {},
+  category: null,
 };
 
 const authSlice = createSlice({
@@ -28,7 +40,7 @@ const authSlice = createSlice({
   initialState,
   reducers: {
     resetCategory(state) {
-      state.category = {};
+      state.category = null;
     },
     resetSuccess(state) {
       state.successMessage = "";
@@ -52,6 +64,20 @@ const authSlice = createSlice({
       state.error = action?.error?.message;
     });
 
+    // Get category by id
+    builder.addCase(getCategoryById.pending, (state) => {
+      state.isLoading = true;
+    });
+    builder.addCase(getCategoryById.fulfilled, (state, action) => {
+      state.isLoading = false;
+      state.category = action.payload.data;
+    });
+    builder.addCase(getCategoryById.rejected, (state, action) => {
+      state.isLoading = false;
+      state.error = action?.error?.message;
+    });
+
+    // Add category
     builder.addCase(addCategory.pending, (state) => {
       state.isLoading = true;
     });
@@ -62,6 +88,20 @@ const authSlice = createSlice({
       state.successMessage = "Category Created Successfully";
     });
     builder.addCase(addCategory.rejected, (state, action) => {
+      state.isLoading = false;
+      state.error = action?.error?.message;
+    });
+
+    // Update category
+    builder.addCase(updateCategory.pending, (state) => {
+      state.isLoading = true;
+    });
+    builder.addCase(updateCategory.fulfilled, (state, action) => {
+      state.isLoading = false;
+      state.categories = action.payload.data.categories;
+      state.successMessage = "Category Updated Successfully";
+    });
+    builder.addCase(updateCategory.rejected, (state, action) => {
       state.isLoading = false;
       state.error = action?.error?.message;
     });

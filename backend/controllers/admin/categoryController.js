@@ -2,7 +2,8 @@ const Category = require("./../../models/category");
 
 module.exports.getCategories = async (req, res) => {
   try {
-    const categories = await Category.find()
+    const { id } = req.query;
+    const categories = await Category.find({ _id: { $ne: id } })
       .populate("parentCategory")
       .select("-__v");
     return res.status(200).json({
@@ -15,7 +16,7 @@ module.exports.getCategories = async (req, res) => {
   }
 };
 
-module.exports.addCategories = async (req, res) => {
+module.exports.addCategory = async (req, res) => {
   try {
     const categoriesData = req.body.data;
     const { name, description, parentCategory, attributes, image } =
@@ -46,24 +47,34 @@ module.exports.addCategories = async (req, res) => {
 module.exports.updateCategory = async (req, res) => {
   try {
     const { id } = req.params;
-    const categoriesData = req.body.data;
-    const { name, description } = categoriesData;
+    const { name, description, parentCategory, attributes, image } = req.body;
+
     const category = await Category.findById(id);
+
     if (!category) {
-      res.status(404).json({ message: "Can not find category" });
+      return res.status(404).json({ message: "Cannot find category" });
     }
-    if (name) {
-      category.name = name;
-      category.description = description;
-    } else {
-      res.status(500).json({ message: "required field is missing" });
+
+    if (!name) {
+      return res.status(400).json({ message: "Required field is missing" });
     }
-    const newCategory = await category.save();
-    res.status(200).json({ data: newCategory });
+
+    category.name = name;
+    category.description = description;
+    category.attributes = attributes;
+    category.image = image;
+    category.parentCategory = parentCategory;
+    category.updatedAt = Date.now();
+
+    const updatedCategory = await category.save();
+
+    return res.status(200).json({ data: updatedCategory });
   } catch (err) {
-    return res
-      .status(500)
-      .json({ message: "something went wrong! ", error: err });
+    console.error("err", err);
+    return res.status(500).json({
+      message: "Something went wrong!",
+      error: err.message,
+    });
   }
 };
 
@@ -76,6 +87,19 @@ module.exports.deleteCategory = async (req, res) => {
     return res
       .status(200)
       .json({ message: "category deleted successfully", data: { categories } });
+  } catch (error) {
+    res.status(500).json({ message: "Something went wrong!", error });
+  }
+};
+
+module.exports.getCategoryById = async (req, res) => {
+  const { id } = req.params;
+  try {
+    const category = await Category.findById(id)
+      .select("-__v")
+      .populate("parentCategory", "__id name");
+
+    res.status(200).json({ data: category });
   } catch (error) {
     res.status(500).json({ message: "Something went wrong!", error });
   }

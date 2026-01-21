@@ -4,12 +4,27 @@ interface CategoryAddUpdateState {
   data?: Record<string, unknown>;
 }
 
-interface CategoryFormValues {
+interface CategoryImageData {
+  name?: string | null;
+  url?: string | null;
+  key?: string | null;
+  imageUrl?: string | null;
+}
+
+interface Category {
   name: string;
   description: string;
-  attributes: Record<string, unknown>[];
-  images: ImageData[];
-  parentCategory?: string; // Optional parent category
+  _id: string;
+  attributes: {
+    name: string;
+    options: string[]; // completely dynamic, product will define actual variant values later
+  }[];
+  parentCategory?: { _id: string; name: string };
+  image?: ImageItem | null;
+}
+
+interface CategoryFormValues extends Category {
+  parentCategory?: string;
 }
 
 interface CategoryFormProps {

@@ -13,15 +13,48 @@ interface AddCategoryData {
   description?: string;
 }
 
-export const getCategories = createAsyncThunk("admin/category", async () => {
-  try {
-    const response = await apiCall("GET", "/admin/categories");
-    return response;
-  } catch (error) {
-    const apiError = error as ApiError;
-    throw apiError?.response?.data || apiError;
-  }
-});
+export const getCategories = createAsyncThunk(
+  "admin/category",
+  async (id?: string) => {
+    try {
+      const response = await apiCall(
+        "GET",
+        `/admin/categories?${id ? `id=${id}` : ""}`,
+      );
+      return response;
+    } catch (error) {
+      const apiError = error as ApiError;
+      throw apiError?.response?.data || apiError;
+    }
+  },
+);
+
+export const getCategoryById = createAsyncThunk(
+  "admin/category/getById",
+  async (id: string) => {
+    try {
+      const response = await apiCall("GET", `/admin/category/${id}`);
+      return response;
+    } catch (error) {
+      const apiError = error as ApiError;
+      throw apiError?.response?.data || apiError;
+    }
+  },
+);
+
+export const updateCategory = createAsyncThunk(
+  "admin/category/update",
+  async (data: AddCategoryData & { id: string }) => {
+    const { id, ...payload } = data;
+    try {
+      const response = await apiCall("PUT", `/admin/category/${id}`, payload);
+      return response;
+    } catch (error) {
+      const apiError = error as ApiError;
+      throw apiError?.response?.data || apiError;
+    }
+  },
+);
 
 export const addCategory = createAsyncThunk(
   "admin/category/add",
@@ -34,7 +67,7 @@ export const addCategory = createAsyncThunk(
       const apiError = error as ApiError;
       throw apiError?.response?.data || apiError;
     }
-  }
+  },
 );
 
 export const deleteCategory = createAsyncThunk(
@@ -47,5 +80,5 @@ export const deleteCategory = createAsyncThunk(
       const apiError = error as ApiError;
       throw apiError?.response?.data || apiError;
     }
-  }
+  },
 );

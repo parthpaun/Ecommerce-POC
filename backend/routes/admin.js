@@ -4,7 +4,8 @@ const categoryController = require("../controllers/admin/categoryController");
 const productsController = require("../controllers/admin/productController");
 
 router.get("/categories", categoryController.getCategories);
-router.post("/category", categoryController.addCategories);
+router.get("/category/:id", categoryController.getCategoryById);
+router.post("/category", categoryController.addCategory);
 router.put("/category/:id", categoryController.updateCategory);
 router.delete("/category/:id", categoryController.deleteCategory);
 

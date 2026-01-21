@@ -8,53 +8,61 @@ import {
   IconButton,
 } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
-import { useCallback, useMemo } from "react";
+import BorderColorIcon from "@mui/icons-material/BorderColor";
+import { useMemo } from "react";
 
-type Category = {
-  _id: string;
+type CategoryData = {
   name: string;
-  parentCategory?: {
-    name: string;
-  };
   description: string;
+  _id: string;
+  attributes: Record<string, string>[];
+  parentCategory?: { _id: string; name: string };
+  image?: {
+    name?: string | null;
+    url?: string | null;
+    key?: string | null;
+  } | null;
 };
 
 type Props = {
-  data: Category[];
+  data: CategoryData[];
   handleDeleteCategory: (id: string) => void;
+  handleUpdateCategory: (id: string) => void;
 };
 const Table = (props: Props) => {
-  const { data, handleDeleteCategory } = props;
-
-  const memoizedHandleDelete = useCallback(
-    (id: string) => {
-      handleDeleteCategory(id);
-    },
-    [handleDeleteCategory]
-  );
+  const { data, handleDeleteCategory, handleUpdateCategory } = props;
 
   const paperStyle = useMemo(() => ({ padding: "1rem" }), []);
 
-  const memoizedTableBody = useMemo(() => (
-    <TableBody>
-      {data?.map((category, index) => (
-        <TableRow key={category?._id}>
-          <TableCell>{index + 1}</TableCell>
-          <TableCell>{category?.name}</TableCell>
-          <TableCell>{category?.parentCategory?.name}</TableCell>
-          <TableCell>{category?.description}</TableCell>
-          <TableCell>
-            <IconButton
-              color="error"
-              onClick={() => memoizedHandleDelete(category?._id)}
-            >
-              <DeleteIcon />
-            </IconButton>
-          </TableCell>
-        </TableRow>
-      ))}
-    </TableBody>
-  ), [data, memoizedHandleDelete]);
+  const memoizedTableBody = useMemo(
+    () => (
+      <TableBody>
+        {data?.map((category, index) => (
+          <TableRow key={category?._id}>
+            <TableCell>{index + 1}</TableCell>
+            <TableCell>{category?.name}</TableCell>
+            <TableCell>{category?.parentCategory?.name}</TableCell>
+            <TableCell>{category?.description}</TableCell>
+            <TableCell>
+              <IconButton
+                color="primary"
+                onClick={() => handleUpdateCategory(category?._id)}
+              >
+                <BorderColorIcon />
+              </IconButton>
+              <IconButton
+                color="error"
+                onClick={() => handleDeleteCategory(category?._id)}
+              >
+                <DeleteIcon />
+              </IconButton>
+            </TableCell>
+          </TableRow>
+        ))}
+      </TableBody>
+    ),
+    [data, handleUpdateCategory, handleDeleteCategory],
+  );
 
   return (
     <Paper elevation={2} style={paperStyle}>

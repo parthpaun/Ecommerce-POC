@@ -1,12 +1,13 @@
-import React, { useCallback, useState } from "react";
+import React, { useState } from "react";
 import { useDropzone } from "react-dropzone";
-import { Box, Typography, IconButton, Avatar, Paper } from "@mui/material";
+import { Box, Typography, IconButton, Paper } from "@mui/material";
 import { Delete, CloudUpload, AddCircleOutline } from "@mui/icons-material";
 
+
 interface ImageUploadProps {
-  images: ImageData[];
+  images: ImageItem[];
   setImages: (files: File[]) => void;
-  deleteImage: (imageData: ImageData) => void;
+  deleteImage: (imageData: ImageItem) => void;
   isMultiple?: boolean;
 }
 
@@ -18,14 +19,11 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
 }) => {
   const [, setHoverIndex] = useState<number | null>(null); // Track hovered image
 
-  const onDrop = useCallback(
-    (acceptedFiles: File[]) => {
-      setImages([...acceptedFiles]);
-    },
-    [setImages]
-  );
+  const onDrop = (acceptedFiles: File[]) => {
+    setImages([...acceptedFiles]);
+  };
 
-  const removeImage = (file: ImageData) => {
+  const removeImage = (file: ImageItem) => {
     deleteImage(file);
   };
 
@@ -89,68 +87,85 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
             },
           }}
         >
-          {images.map((file, index) => (
-            <Box
-              key={index}
-              sx={{
-                position: "relative",
-                width: "100px",
-                height: "100px",
-                borderRadius: 2,
-                overflow: "hidden",
-                "&:hover .image-preview": { filter: "blur(5px)" }, // Blur on hover
-                "&:hover .delete-overlay": { opacity: 1 }, // Show delete button on hover
-              }}
-              onMouseEnter={() => setHoverIndex(index)}
-              onMouseLeave={() => setHoverIndex(null)}
-            >
-              {/* Image Preview */}
-              <Avatar
-                src={file.imageUrl}
-                variant="rounded"
-                className="image-preview"
-                sx={{
-                  width: "100%",
-                  height: "100%",
-                  borderRadius: 2,
-                  transition: "filter 0.3s ease-in-out",
-                }}
-              />
+          {images.map((file, index) => {
+            // Prioritize blob URL (imageUrl) for immediate preview, fallback to S3 URL
+            const imageUrl = file.imageUrl || file.url || "";
 
-              {/* Delete Button with Improved Visibility */}
+            return (
               <Box
-                className="delete-overlay"
+                key={index}
                 sx={{
-                  position: "absolute",
-                  top: 0,
-                  left: 0,
-                  width: "100%",
-                  height: "100%",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  backgroundColor: "rgba(0, 0, 0, 0.5)", // Semi-transparent dark overlay
-                  opacity: 0,
-                  transition: "opacity 0.3s ease-in-out",
+                  position: "relative",
+                  width: "100px",
+                  height: "100px",
+                  borderRadius: 2,
+                  overflow: "hidden",
+                  "&:hover .image-preview": { filter: "blur(5px)" }, // Blur on hover
+                  "&:hover .delete-overlay": { opacity: 1 }, // Show delete button on hover
                 }}
+                onMouseEnter={() => setHoverIndex(index)}
+                onMouseLeave={() => setHoverIndex(null)}
               >
-                <IconButton
-                  onClick={() => removeImage(file)}
+                {/* Direct img tag for debugging */}
+                <img
+                  src={imageUrl}
+                  alt={file.name || `Image ${index}`}
+                  className="image-preview"
+                  style={{
+                    width: "100%",
+                    height: "100%",
+                    borderRadius: "8px",
+                    transition: "filter 0.3s ease-in-out",
+                    objectFit: "cover",
+                  }}
+                  onLoad={() =>
+                    console.log(`✅ Image loaded successfully: ${imageUrl}`)
+                  }
+                  onError={(e) => {
+                    console.error(`❌ Failed to load image:`, {
+                      url: imageUrl,
+                      file,
+                      error: e,
+                    });
+                    e.currentTarget.src = "/placeholder.png";
+                  }}
+                />
+
+                {/* Delete Button with Improved Visibility */}
+                <Box
+                  className="delete-overlay"
                   sx={{
-                    backgroundColor: "rgba(255, 255, 255, 0.2)", // Transparent glass effect
-                    color: "#fff",
-                    backdropFilter: "blur(8px)", // Stronger blur for visibility
-                    boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.2)", // Depth for better visibility
-                    "&:hover": {
-                      backgroundColor: "rgba(255, 255, 255, 0.3)", // Lighter hover effect
-                    },
+                    position: "absolute",
+                    top: 0,
+                    left: 0,
+                    width: "100%",
+                    height: "100%",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    backgroundColor: "rgba(0, 0, 0, 0.5)", // Semi-transparent dark overlay
+                    opacity: 0,
+                    transition: "opacity 0.3s ease-in-out",
                   }}
                 >
-                  <Delete fontSize="medium" />
-                </IconButton>
+                  <IconButton
+                    onClick={() => removeImage(file)}
+                    sx={{
+                      backgroundColor: "rgba(255, 255, 255, 0.2)", // Transparent glass effect
+                      color: "#fff",
+                      backdropFilter: "blur(8px)", // Stronger blur for visibility
+                      boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.2)", // Depth for better visibility
+                      "&:hover": {
+                        backgroundColor: "rgba(255, 255, 255, 0.3)", // Lighter hover effect
+                      },
+                    }}
+                  >
+                    <Delete fontSize="medium" />
+                  </IconButton>
+                </Box>
               </Box>
-            </Box>
-          ))}
+            );
+          })}
         </Box>
         {!(!isMultiple && images.length > 0) &&
           (images.length === 0 ? (

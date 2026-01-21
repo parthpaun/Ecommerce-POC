@@ -24,14 +24,17 @@ const uploadFileWithS3 = async (req, res) => {
         Bucket: process.env.AWS_BUCKET_NAME,
         Key: fileName, // File name you want to save as in S3
         Body: file.buffer,
-        ContentType: file.mimetype,
+        ContentType: file.mimetype
       };
       const command = new PutObjectCommand(params);
-      await s3.send(command);
-
+      s3.send(command);
+      // Properly encode the URL to handle spaces and special characters
+      const objectUrl = `https://${process.env.AWS_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/${encodeURIComponent(fileName).replace(/%2F/g, '/')}`;
+      // const objectUrl = await getSignedUrlForFile(fileName);
       uploadedFiles.push({
-        fileName: file.originalname,
-        key: fileName
+        name: file.originalname,
+        key: fileName,
+        url: objectUrl,
       });
     }
     res.status(200).json({

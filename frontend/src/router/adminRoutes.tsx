@@ -92,15 +92,7 @@ export const adminRoutes = {
               <CategoryForm isUpdate />
             </div>
           ),
-        },
-        {
-          path: ":productId",
-          element: (
-            <div>
-              <h1>Details </h1>{" "}
-            </div>
-          ),
-        },
+        }
       ],
     },
     {
